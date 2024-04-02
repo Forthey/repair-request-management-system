@@ -1,10 +1,10 @@
 from sqlalchemy import ForeignKey, text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from datetime import datetime
 from typing import Annotated
 
-from database import Base
+from database.database import Base
 
 IntPrimKey = Annotated[int, mapped_column(primary_key=True)]
 CreateDate = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
@@ -51,11 +51,17 @@ class RelReasonsApplicationsORM(Base):
     # TODO: relationships
 
 
+class CloseReasonsORM(Base):
+    __tablename__ = "close_reasons"
+
+    id: Mapped[IntPrimKey]
+    reason: Mapped[str] = mapped_column(unique=True)
+
+
 class ActivitiesORM(Base):
     __tablename__ = "activities"
 
     id: Mapped[IntPrimKey]
     name: Mapped[str] = mapped_column(unique=True)
-    notes: Mapped[str | None]
 
     # TODO: relationships

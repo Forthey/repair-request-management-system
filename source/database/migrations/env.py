@@ -10,15 +10,7 @@ from alembic import context
 
 from config import settings
 
-from models.addresses import *  #noqa
-from models.applications import *  #noqa
-from models.clients import *  #noqa
-from models.contacts import *  #noqa
-from models.machines import *  #noqa
-from models.workers import *  #noqa
-from models.other import *  #noqa
-
-from database import Base
+from database.database import Base
 
 
 config = context.config

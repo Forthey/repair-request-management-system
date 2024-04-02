@@ -1,23 +1,25 @@
 from sqlalchemy import ForeignKey, text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column
 
 from datetime import datetime
 from typing import Annotated
 
-from database import Base
+from database.database import Base
 
 IntPrimKey = Annotated[int, mapped_column(primary_key=True)]
 CreateDate = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
 
 
-class WorkersORM(Base):
-    __tablename__ = "workers"
+class ContactsORM(Base):
+    __tablename__ = "contacts"
 
     id: Mapped[IntPrimKey]
-    telegram_id: Mapped[int] = mapped_column(unique=True)
-
     name: Mapped[str]
     surname: Mapped[str]
     patronymic: Mapped[str | None]
+    company_position_id: Mapped[int] = mapped_column(ForeignKey("company_positions.id"))
 
-    access_rights_id: Mapped[int] = mapped_column(ForeignKey("access_rights.id"))
+    email: Mapped[str | None]
+    phone1: Mapped[str | None]
+    phone2: Mapped[str | None]
+    phone3: Mapped[str | None]
