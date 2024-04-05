@@ -20,7 +20,7 @@ class WorkerORM(Base):
     surname: Mapped[str]
     patronymic: Mapped[str | None]
 
-    access_rights: Mapped[str]
+    access_right: Mapped[str]
 
     # Relationships
 
