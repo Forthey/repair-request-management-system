@@ -4,6 +4,11 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     TOKEN: str
 
+    BOT_USERNAME: str
+
+    TG_API_ID: int
+    TG_API_HASH: str
+
     DB_POSTGRES_HOST: str
     DB_POSTGRES_PORT: int
     DB_POSTGRES_USER: str
@@ -13,6 +18,18 @@ class Settings(BaseSettings):
     @property
     def get_token(self):
         return self.TOKEN
+
+    @property
+    def get_bot_username(self):
+        return self.BOT_USERNAME
+
+    @property
+    def get_tg_api_id(self):
+        return self.TG_API_ID
+
+    @property
+    def get_tg_api_hash(self):
+        return self.TG_API_HASH
 
     @property
     def get_psycopg_URL(self):

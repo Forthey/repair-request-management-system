@@ -10,7 +10,7 @@ IntPrimKey = Annotated[int, mapped_column(primary_key=True)]
 CreateDate = Annotated[datetime.datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
 
 
-class AddressesORM(Base):
+class AddressORM(Base):
     __tablename__ = 'addresses'
 
     id: Mapped[IntPrimKey]
@@ -20,10 +20,11 @@ class AddressesORM(Base):
     workhours: Mapped[str | None]
     notes: Mapped[str | None]
 
-    client: Mapped["ClientsORM"] = relationship(
+    client: Mapped["ClientORM"] = relationship(
+        cascade='all,delete',
         back_populates="addresses"
     )
-    applications: Mapped["ApplicationsORM"] = relationship(
-        back_populates="applications",
-        secondary="rel_addresses_applications"
+
+    applications: Mapped[list["ApplicationORM"]] = relationship(
+        back_populates="address",
     )
