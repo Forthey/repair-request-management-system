@@ -2,8 +2,7 @@ from sqlalchemy import select, update, delete, insert
 from sqlalchemy.exc import IntegrityError
 
 from database.engine import async_session_factory, AsyncSession
-from database.models.worker_orm import WorkerORM
-from database.models.application_orm import ApplicationORM
+from database.models.all import WorkerORM
 from schemas.workers import WorkerAdd, Worker
 
 
@@ -22,6 +21,16 @@ async def add_worker(worker: WorkerAdd) -> int | None:
             return worker_id
         except IntegrityError:
             return None
+
+
+async def get_workers() -> list[Worker]:
+    session: AsyncSession
+    async with async_session_factory() as session:
+        query = select(WorkerORM)
+
+        workers_orm = (await session.execute(query)).scalars().all()
+
+        return [Worker.model_validate(worker, from_attributes=True) for worker in workers_orm]
 
 
 async def search_workers(name: str) -> list[Worker]:

@@ -106,8 +106,8 @@ async def add_name(message: Message, state: FSMContext):
         return
 
     await state.update_data(
-        name=fio[0],
-        surname=fio[1],
+        surname=fio[0],
+        name=fio[1],
         patronymic=(fio[2] if len(fio) == 3 else None)
     )
 
