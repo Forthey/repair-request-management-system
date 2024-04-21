@@ -9,7 +9,7 @@ from database.models.client_orm import ClientORM
 from database.models.address_orm import AddressORM
 from database.models.contact_orm import ContactORM
 from database.models.machine_orm import MachineORM
-from database.models.other_orms import ActivityORM, CloseReasonORM, CompanyPositionORM
+from database.models.other_orms import CompanyActivityORM, CloseReasonORM, CompanyPositionORM
 
 
 app = FastAPI()
@@ -65,10 +65,10 @@ class MachineAdmin(ModelView, model=MachineORM):
 admin.add_view(MachineAdmin)
 
 
-class ActivityAdmin(ModelView, model=ActivityORM):
+class ActivityAdmin(ModelView, model=CompanyActivityORM):
     name = "Activity"
     name_plural = "Activities"
-    column_list = ActivityORM.__table__.columns
+    column_list = CompanyActivityORM.__table__.columns
 
 
 admin.add_view(ActivityAdmin)

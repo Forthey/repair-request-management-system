@@ -8,18 +8,13 @@ from database.database import Base
 
 IntPrimKey = Annotated[int, mapped_column(primary_key=True)]
 CreateDate = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
+StrPrimKey = Annotated[str, mapped_column(primary_key=True)]
 
 
 class MachineORM(Base):
     __tablename__ = "machines"
 
-    id: Mapped[IntPrimKey]
-    name: Mapped[str] = mapped_column(unique=True)
+    name: Mapped[StrPrimKey]
     photo_url: Mapped[str | None]
-    release_year: Mapped[str]
 
     # Relationships
-
-    applications: Mapped[list["ApplicationORM"]] = relationship(
-        back_populates="machine"
-    )

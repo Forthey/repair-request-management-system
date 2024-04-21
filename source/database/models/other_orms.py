@@ -8,26 +8,21 @@ from database.database import Base
 
 IntPrimKey = Annotated[int, mapped_column(primary_key=True)]
 CreateDate = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
+StrPrimKey = Annotated[str, mapped_column(primary_key=True)]
 
 
 class CompanyPositionORM(Base):
     __tablename__ = "company_positions"
 
-    id: Mapped[IntPrimKey]
-    position: Mapped[str]
+    name: Mapped[StrPrimKey]
 
     # Relationships
-
-    contacts: Mapped[list["ContactORM"]] = relationship(
-        back_populates="company_position"
-    )
 
 
 class ApplicationReasonORM(Base):
     __tablename__ = "applications_reasons"
 
-    id: Mapped[IntPrimKey]
-    reason: Mapped[str]
+    name: Mapped[StrPrimKey]
 
     # Relationships
 
@@ -40,8 +35,8 @@ class ApplicationReasonORM(Base):
 class RelReasonApplicationORM(Base):
     __tablename__ = "rel_reasons_applications"
 
-    reason_id: Mapped[int] = mapped_column(
-        ForeignKey("applications_reasons.id", ondelete="cascade"),
+    reason_name: Mapped[str] = mapped_column(
+        ForeignKey("applications_reasons.name", ondelete="cascade"),
         primary_key=True
     )
     application_id: Mapped[int] = mapped_column(
@@ -53,24 +48,10 @@ class RelReasonApplicationORM(Base):
 class CloseReasonORM(Base):
     __tablename__ = "close_reasons"
 
-    id: Mapped[IntPrimKey]
-    reason: Mapped[str] = mapped_column(unique=True)
-
-    # Relationships
-
-    applications: Mapped[list["ApplicationORM"]] = relationship(
-        back_populates="close_reason"
-    )
+    name: Mapped[StrPrimKey]
 
 
-class ActivityORM(Base):
+class CompanyActivityORM(Base):
     __tablename__ = "activities"
 
-    id: Mapped[IntPrimKey]
-    name: Mapped[str] = mapped_column(unique=True)
-
-    # Relationships
-
-    clients: Mapped[list["ClientORM"]] = relationship(
-        back_populates="activity"
-    )
+    name: Mapped[StrPrimKey]

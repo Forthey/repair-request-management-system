@@ -1,0 +1,6 @@
+tmp_access_rights = ["Админ", "Управление заявками", "Просмотр заявок", "Добавление метаданных"]
+
+# TODO список pydantic Worker
+workers = [
+    "Forthey0"
+]

@@ -23,15 +23,16 @@ class ApplicationORM(Base):
     est_repair_duration_hours: Mapped[int | None]
 
     editor_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
-    client_id: Mapped[int | None] = mapped_column(ForeignKey("clients.id", ondelete="SET NULL"))
     repairer_id: Mapped[int | None] = mapped_column(ForeignKey("workers.id"))
 
+    client_name: Mapped[int | None] = mapped_column(ForeignKey("clients.name", ondelete="SET NULL"))
     contact_id: Mapped[int | None] = mapped_column(ForeignKey("contacts.id", ondelete="SET NULL"))
-    address_id: Mapped[int | None] = mapped_column(ForeignKey("addresses.id", ondelete="SET NULL"))
-    machine_id: Mapped[int | None] = mapped_column(ForeignKey("machines.id", ondelete="SET NULL"))
+
+    address: Mapped[str | None] = mapped_column(ForeignKey("addresses.name", ondelete="SET NULL"))
+    machine: Mapped[str | None] = mapped_column(ForeignKey("machines.name", ondelete="SET NULL"))
 
     closed_at: Mapped[datetime | None]
-    close_reason_id: Mapped[int | None] = mapped_column(ForeignKey("close_reasons.id", ondelete="SET NULL"))
+    close_reason: Mapped[str | None] = mapped_column(ForeignKey("close_reasons.name", ondelete="SET NULL"))
 
     notes: Mapped[str | None]
 
@@ -56,17 +57,6 @@ class ApplicationORM(Base):
     )
 
     contact: Mapped["ContactORM"] = relationship(
-        back_populates="applications"
-    )
-
-    address: Mapped["AddressORM"] = relationship(
-        back_populates="applications"
-    )
-
-    machine: Mapped["MachineORM"] = relationship(
-        back_populates="applications"
-    )
-
-    close_reason: Mapped[Optional["CloseReasonORM"]] = relationship(
+        foreign_keys=[contact_id],
         back_populates="applications"
     )
