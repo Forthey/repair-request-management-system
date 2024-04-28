@@ -28,7 +28,6 @@ class NewFilter(BaseFilter):  # [1]
 router = Router()
 router.message.filter(
     NewFilter(),
-    StateFilter(None),
     F.text
 )
 

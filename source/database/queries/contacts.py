@@ -7,6 +7,19 @@ from database.models.contact_orm import ContactORM
 from schemas.contacts import ContactAdd, Contact
 
 
+async def get_contact(contact_id: int) -> Contact | None:
+    session = AsyncSession
+    async with async_session_factory() as session:
+        query = (
+            select(ContactORM)
+            .where(ContactORM.id == contact_id)
+        )
+
+        contact_orm = (await session.execute(query)).scalar_one_or_none()
+
+        return Contact.model_validate(contact_orm) if contact_orm else None
+
+
 async def add_contact(contact: ContactAdd) -> int | None:
     session: AsyncSession
     async with async_session_factory() as session:
@@ -42,3 +55,16 @@ async def search_contacts(client: str,
         contacts_orm = (await session.execute(query)).scalars().all()
 
         return [Contact.model_validate(contact, from_attributes=True) for contact in contacts_orm]
+
+
+async def contact_exists(contact_id: int) -> bool:
+    session = AsyncSession
+    async with async_session_factory() as session:
+        query = (
+            select(ContactORM)
+            .where(ContactORM.id == contact_id)
+        )
+
+        contact_orm = (await session.execute(query)).scalar_one_or_none()
+
+        return contact_orm is not None

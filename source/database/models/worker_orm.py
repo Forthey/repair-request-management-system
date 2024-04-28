@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, text
+from sqlalchemy import ForeignKey, text, BigInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from datetime import datetime
@@ -14,7 +14,7 @@ class WorkerORM(Base):
     __tablename__ = "workers"
 
     id: Mapped[IntPrimKey]
-    telegram_id: Mapped[int] = mapped_column(unique=True)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True)
 
     name: Mapped[str]
     surname: Mapped[str]

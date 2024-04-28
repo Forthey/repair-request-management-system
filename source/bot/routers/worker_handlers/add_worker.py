@@ -13,8 +13,7 @@ from bot.commands import base_commands
 from schemas.workers import WorkerAdd
 from database.queries import workers as w
 
-from bot.cache_data import tmp_access_rights
-
+from bot.cache_data import tmp_access_rights, fetch_workers
 
 router = Router()
 
@@ -148,10 +147,12 @@ async def confirm_worker(callback: CallbackQuery, state: FSMContext):
 
     if not await w.add_worker(worker):
         await callback.message.answer(
-            text="Работник с таким имменем уже существует",
+            text="Работник с таким именем уже существует",
             reply_markup=render_keyboard_buttons(base_commands, 2)
         )
         return
+
+    await fetch_workers()
 
     await callback.answer(
         text=f"Работник добавлен"

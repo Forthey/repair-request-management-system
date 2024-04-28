@@ -46,6 +46,17 @@ async def add_machine(name: str, photo: io.BytesIO | None = None) -> bool:
             return False
 
 
+async def find_machine(name: str) -> bool:
+    session: AsyncSession
+    async with async_session_factory() as session:
+        query = (
+            select(MachineORM)
+            .where(MachineORM.name == name)
+        )
+
+        return (await session.execute(query)).scalar_one_or_none() is not None
+
+
 async def search_machines(name: str) -> list[Machine]:
     session: AsyncSession
     async with async_session_factory() as session:

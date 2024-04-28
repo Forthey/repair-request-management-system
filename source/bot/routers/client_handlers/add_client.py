@@ -3,7 +3,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from bot.cache_data import fetch_workers
+
 from bot.commands import base_commands
 from bot.state_watchers.client import ClientState
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
@@ -141,8 +141,6 @@ async def add_client_confirmation(callback: CallbackQuery, state: FSMContext):
     client = ClientAdd.model_validate(client_data, from_attributes=True)
 
     await db_clients.add_client(client)
-
-    await fetch_workers()
 
     await callback.answer("Клиент добавлен")
     await callback.message.answer(

@@ -1,26 +1,26 @@
+from typing import Optional
+
 from pydantic import BaseModel
 
 from datetime import datetime
 
 
 class ApplicationAdd(BaseModel):
-    main_application_id: int | None
+    main_application_id: int | None = None
 
-    est_repair_date: datetime
-    est_repair_duration_hours: int | None
+    est_repair_date: datetime | None = None
+    est_repair_duration_hours: int | None = None
 
     editor_id: int
-    repairer_id: int | None
+    repairer_id: int | None = None
 
-    client: str
-    contact_id: int | None
+    client_name: str
+    contact_id: int | None = None
 
     address: str
     machine: str
 
-    notes: str | None
-
-    app_reasons: list["ApplicationReasonDTO"]
+    notes: str | None = None
 
 
 class Application(ApplicationAdd):
@@ -35,5 +35,5 @@ class Application(ApplicationAdd):
 
 class ApplicationRel(Application):
     editor: "Worker"
-    repairer: "Worker" | None
+    repairer: Optional["Worker"]
     contact: "Contact"

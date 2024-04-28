@@ -8,6 +8,7 @@ from bot.utility.render_buttons import render_keyboard_buttons
 from bot.auth_filter import AuthFilter
 
 # Nested routers
+from bot.routers.app_handlers import app_base
 from bot.routers.worker_handlers import workers_base
 from bot.routers.machine_handlers import machines_base
 from bot.routers.client_handlers import client_base
@@ -36,7 +37,7 @@ async def print_help(message: Message):
 
 @router.message(F.text.lower() == "отмена")
 async def cancel(message: Message, state: FSMContext):
-    state_str = state.set_state()
+    state_str = await state.get_state()
 
     if state_str is None:
         await state.set_data({})
@@ -59,11 +60,12 @@ async def print_help(message: Message):
 
 
 router.include_routers(
+    new_base.router,
+    app_base.router,
     workers_base.router,
     machines_base.router,
     client_base.router,
     contact_base.router,
     address_base.router,
-    new_base.router,
     search_base.router
 )

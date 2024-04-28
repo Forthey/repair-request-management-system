@@ -67,6 +67,17 @@ async def add_app_reason(reason: str) -> str | None:
             return None
 
 
+async def find_app_reason(reason: str) -> bool:
+    session: AsyncSession
+    async with async_session_factory() as session:
+        query = (
+            select(ApplicationReasonORM)
+            .where(ApplicationReasonORM.name == reason)
+        )
+
+        return (await session.execute(query)).scalar_one_or_none() is not None
+
+
 async def search_app_reason(mask: str) -> list[ApplicationReason]:
     session: AsyncSession
     async with async_session_factory() as session:

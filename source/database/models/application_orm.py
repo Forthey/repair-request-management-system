@@ -17,7 +17,6 @@ class ApplicationORM(Base):
     main_application_id: Mapped[int | None] = mapped_column(ForeignKey("applications.id"))
 
     created_at: Mapped[CreateDate]
-    updated_at: Mapped[CreateDate]
 
     est_repair_date: Mapped[datetime | None]
     est_repair_duration_hours: Mapped[int | None]
