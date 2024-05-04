@@ -1,3 +1,8 @@
+
+app_strings = [
+    "заявка"
+]
+
 worker_strings = [
     "работник"
 ]
@@ -44,6 +49,7 @@ address_strings = [
 
 def concat_strings() -> list[str]:
     return (
+            app_strings +
             worker_strings +
             machine_strings +
             app_reason_strings +

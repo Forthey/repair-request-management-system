@@ -3,9 +3,7 @@ from aiogram.filters import StateFilter
 from aiogram.types import Message
 
 # Nester routers
-from bot.routers.contact_handlers import (
-    add_contact
-)
+from bot.routers.entity_handlers.contact_handlers import add_contact
 
 # Button from list renderer
 from bot.utility.render_buttons import render_keyboard_buttons

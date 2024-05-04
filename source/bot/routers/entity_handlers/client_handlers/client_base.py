@@ -4,24 +4,22 @@ from aiogram.types import Message
 
 
 # Nester routers
-from bot.routers.address_handlers import (
-    add_address
-)
+from bot.routers.entity_handlers.client_handlers import add_client
 # Button from list renderer
 from bot.utility.render_buttons import render_keyboard_buttons
-from bot.commands import address_commands
+from bot.commands import client_commands
 
 router = Router()
 
 
-@router.message(StateFilter(None), F.text.lower() == "адреса")
+@router.message(StateFilter(None), F.text.lower() == "клиенты")
 async def print_help(message: Message):
     await message.answer(
         text="Выберите действие",
-        reply_markup=render_keyboard_buttons(address_commands, 2)
+        reply_markup=render_keyboard_buttons(client_commands, 2)
     )
 
 
 router.include_routers(
-    add_address.router,
+    add_client.router,
 )

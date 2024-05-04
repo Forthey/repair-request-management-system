@@ -4,9 +4,7 @@ from aiogram.types import Message
 
 
 # Nester routers
-from bot.routers.worker_handlers import (
-    add_worker
-)
+from bot.routers.entity_handlers.worker_handlers import add_worker
 # Button from list renderer
 from bot.utility.render_buttons import render_keyboard_buttons
 from bot.commands import worker_commands

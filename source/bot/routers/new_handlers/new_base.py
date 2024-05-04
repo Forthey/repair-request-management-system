@@ -2,7 +2,14 @@ from aiogram import Router, F
 from aiogram.filters import BaseFilter, StateFilter
 from aiogram.types import Message
 
-from bot.routers.new_handlers import add_company_position, add_app_reason, add_company_activity, add_close_reason, error
+from bot.routers.new_handlers import (
+    add_machine,
+    add_company_position,
+    add_app_reason,
+    add_company_activity,
+    add_close_reason,
+    error
+)
 
 
 # This scope filter
@@ -18,7 +25,8 @@ class NewFilter(BaseFilter):  # [1]
             await message.answer(
                 text="Недостаточно параметров для вызова new\n"
                      "Проверьте, что формат ввода верный\n"
-                     "Например: new должность менеджер"
+                     "Например: new должность менеджер\n"
+                     "Для вывода подсказок по new напишите /help new"
             )
             return False
         return True
@@ -33,6 +41,7 @@ router.message.filter(
 
 # Include sub routers
 router.include_routers(
+    add_machine.router,
     add_company_position.router,
     add_app_reason.router,
     add_close_reason.router,

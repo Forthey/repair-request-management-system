@@ -1,21 +1,22 @@
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardMarkup
+from aiogram.types import Message
 
 from bot.utility.render_buttons import render_keyboard_buttons
 
 from bot.auth_filter import AuthFilter
 
 # Nested routers
-from bot.routers.app_handlers import app_base
-from bot.routers.worker_handlers import workers_base
-from bot.routers.machine_handlers import machines_base
-from bot.routers.client_handlers import client_base
-from bot.routers.contact_handlers import contact_base
-from bot.routers.address_handlers import address_base
 from bot.routers.new_handlers import new_base
 from bot.routers.seacrh_handlers import search_base
+from bot.routers.help_handlers import help_base
+from bot.routers.entity_handlers.app_handlers import app_base
+from bot.routers.entity_handlers.worker_handlers import workers_base
+from bot.routers.entity_handlers.machine_handlers import machines_base
+from bot.routers.entity_handlers.client_handlers import client_base
+from bot.routers.entity_handlers.contact_handlers import contact_base
+from bot.routers.entity_handlers.address_handlers import address_base
 # Commands
 from bot.commands import base_commands
 
@@ -26,7 +27,7 @@ router.message.filter(
 )
 
 
-@router.message(Command(commands=["start", "help"]))
+@router.message(Command("start"))
 @router.message(StateFilter(None), F.text.lower() == "вывести подсказки")
 async def print_help(message: Message):
     await message.answer(
@@ -61,11 +62,12 @@ async def print_help(message: Message):
 
 router.include_routers(
     new_base.router,
+    search_base.router,
+    help_base.router,
     app_base.router,
     workers_base.router,
     machines_base.router,
     client_base.router,
     contact_base.router,
-    address_base.router,
-    search_base.router
+    address_base.router
 )

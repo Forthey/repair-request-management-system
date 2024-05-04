@@ -27,7 +27,6 @@ class Application(ApplicationAdd):
     id: int
 
     created_at: datetime
-    updated_at: datetime
 
     closed_at: int | None
     close_reason: str | None

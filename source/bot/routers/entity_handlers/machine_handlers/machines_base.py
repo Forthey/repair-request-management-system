@@ -3,9 +3,7 @@ from aiogram.filters import StateFilter
 from aiogram.types import Message
 
 # Nester routers
-from bot.routers.machine_handlers import (
-    add_machine
-)
+from bot.routers.entity_handlers.machine_handlers import add_machine
 # Button from list renderer
 from bot.utility.render_buttons import render_keyboard_buttons
 from bot.commands import machine_commands
