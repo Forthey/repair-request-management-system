@@ -21,8 +21,8 @@ class ApplicationORM(Base):
     est_repair_date: Mapped[datetime | None]
     est_repair_duration_hours: Mapped[int | None]
 
-    editor_id: Mapped[int] = mapped_column(ForeignKey("workers.id"))
-    repairer_id: Mapped[int | None] = mapped_column(ForeignKey("workers.id"))
+    editor_id: Mapped[int] = mapped_column(ForeignKey("workers.telegram_id"))
+    repairer_id: Mapped[int | None] = mapped_column(ForeignKey("workers.telegram_id"))
 
     client_name: Mapped[int | None] = mapped_column(ForeignKey("clients.name", ondelete="SET NULL"))
     contact_id: Mapped[int | None] = mapped_column(ForeignKey("contacts.id", ondelete="SET NULL"))

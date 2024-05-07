@@ -32,7 +32,6 @@ class Application(ApplicationAdd):
     close_reason: str | None
 
 
-class ApplicationRel(Application):
-    editor: "Worker"
-    repairer: Optional["Worker"]
+class ApplicationFull(Application):
     contact: "Contact"
+    reasons: list["ApplicationReason"]

@@ -12,9 +12,7 @@ CreateDate = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('ut
 
 class WorkerORM(Base):
     __tablename__ = "workers"
-
-    id: Mapped[IntPrimKey]
-    telegram_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    telegram_id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
 
     name: Mapped[str]
     surname: Mapped[str]
@@ -25,11 +23,11 @@ class WorkerORM(Base):
     # Relationships
 
     created_applications: Mapped[list["ApplicationORM"]] = relationship(
-        primaryjoin="WorkerORM.id == ApplicationORM.editor_id",
+        primaryjoin="WorkerORM.telegram_id == ApplicationORM.editor_id",
         back_populates="editor"
     )
 
     taken_applications: Mapped[list["ApplicationORM"]] = relationship(
-        primaryjoin="WorkerORM.id == ApplicationORM.repairer_id",
+        primaryjoin="WorkerORM.telegram_id == ApplicationORM.repairer_id",
         back_populates="repairer"
     )

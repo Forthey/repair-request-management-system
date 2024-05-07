@@ -32,7 +32,7 @@ async def add_begin(message: Message, state: FSMContext):
         reply_markup=render_keyboard_buttons(commands, 2)
     )
     await message.answer(
-        f"Введите _имя_ станка, а также его дату производства и другие данные\n"
+        f"Введите имя станка, а также его дату производства и другие данные\n"
         f"Также можно прикрепить фото, чтобы было удобней распознавать станок",
     )
 
@@ -40,15 +40,13 @@ async def add_begin(message: Message, state: FSMContext):
 
 
 @router.message(StateFilter(MachineState.writing_machine_name), F.photo)
-async def add_name_with_photo(message: Message, state: FSMContext, bot: Bot):
+async def add_name_with_photo(message: Message, state: FSMContext):
     name = message.caption
     if len(name) < 3:
         await message.answer("Имя станка слишком короткое")
         return
-
-    file_in_io = io.BytesIO()
-    await bot.download(file=message.photo[-1], destination=file_in_io)
-    if not await add_machine(name, file_in_io):
+    photo_id = message.photo[0].file_id
+    if not await add_machine(name, photo_id):
         await message.answer(
             text="Такой станок уже существует"
         )

@@ -22,7 +22,6 @@ from schemas.applications import ApplicationAdd
 from schemas.clients import Client, ClientAdd
 from schemas.other import ApplicationReason
 
-
 ApplicationAdd.model_rebuild()
 
 router = Router()
@@ -33,17 +32,27 @@ commands = [
     "Отмена"
 ]
 
-
 states_strings: dict[str, str] = {
-    ApplicationState.choosing_app_client: "Введите имя клиента (компании), подавшего заявку",
-    ApplicationState.choosing_app_contact: "Введите id контакта, привязанного к клиенту",
-    ApplicationState.choosing_app_reasons: "Введите причины подачи заявки (когда закончите - нажмите 'Далее')",
-    ApplicationState.choosing_app_machine: "Введите название станка",
-    ApplicationState.choosing_app_address: "Введите адрес, на который необходимо будет выехать",
-    ApplicationState.writing_app_est_repair_date_and_duration: "Введите примерную дату ремонта (формат XX.XX.XXXX) "
-                                                               "и через пробел примерное время, необходимое на ремонт (в часах)",
-    ApplicationState.writing_app_notes: "Напишите допольнительную информацию, которую не удалось поместить в поля выше",
-    ApplicationState.choosing_app_repairer: "Выберите того, кто возьмет заявку на ремонт"
+    ApplicationState.choosing_app_client:
+        "Введите имя клиента (компании), подавшего заявку",
+    ApplicationState.choosing_app_contact:
+        "Введите id контакта, привязанного к клиенту "
+        "(или создайте новый контакт, используя команду new)",
+    ApplicationState.choosing_app_reasons:
+        "Введите причины подачи заявки (когда закончите - нажмите 'Далее')",
+    ApplicationState.choosing_app_machine:
+        "Введите название станка",
+    ApplicationState.choosing_app_address:
+        "Введите адрес, на который необходимо будет выехать "
+        "(или привяжите новые адрес к компании, используя команду new: "
+        "new адрес Пример Адреса)",
+    ApplicationState.writing_app_est_repair_date_and_duration:
+        "Введите примерную дату ремонта (формат XX.XX.XXXX) "
+        "и через пробел примерное время, необходимое на ремонт (в часах) "
+        "(Необязатльное поле)",
+    ApplicationState.writing_app_notes:
+        "Напишите допольнительную информацию, которую не удалось поместить в поля выше"
+        "(Необязательное поле)",
 }
 
 
@@ -194,30 +203,6 @@ async def writing_app_notes(message: Message, state: FSMContext):
     if message.text != "Далее":
         await state.update_data(notes=message.text)
 
-    await state.set_state(ApplicationState.choosing_app_repairer)
-    await message.answer(states_strings[ApplicationState.choosing_app_repairer])
-
-
-@router.message(StateFilter(ApplicationState.choosing_app_repairer), F.text)
-async def add_app_repairer(message: Message, state: FSMContext):
-    if message.text == "Назад":
-        await state.set_state(ApplicationState.writing_app_notes)
-        await message.answer(states_strings[ApplicationState.writing_app_notes])
-        return
-
-    if message.text != "Далее":
-        repairer_id = message.text
-        try:
-            repairer_id = int(repairer_id)
-        except ValueError:
-            await message.answer("Введён неверный id")
-            return
-
-        if not await db_workers.get_worker(repairer_id):
-            await message.answer(f"Работника с id {repairer_id} не существует")
-            return
-        await state.update_data(repairer_id=repairer_id)
-
     app_data = await state.get_data()
     app_data["editor_id"] = message.from_user.id
     app_reasons: list[str] | None = app_data.get("app_reasons")
@@ -229,39 +214,37 @@ async def add_app_repairer(message: Message, state: FSMContext):
         print(app_data["app_reasons"])
         print(e)
         await message.answer("Заполнены не все обязательные поля")
-        await message.answer(states_strings[ApplicationState.choosing_app_repairer])
+        await message.answer(states_strings[ApplicationState.writing_app_notes])
         return
 
     await message.answer(
-        text=f"id основной заявки: {application.main_application_id}\n"
-             f"Клиент: {application.client_name}\n"
-             f"id контакта: {application.contact_id}\n"
-             f"Причины заявки: {"; ".join(app_reasons)}\n"
-             f"Станок: {application.machine}\n"
-             f"Адрес: {application.address}\n"
-             f"Примерная дата ремонта: {application.est_repair_date}\n"
-             f"Примерное время ремонта: {application.est_repair_duration_hours}\n"
-             f"Заметки: {application.notes}\n"
-             f"id работника, который будет заниматься ремонтом: {application.repairer_id}",
-        reply_markup=render_inline_buttons(["Подтвердить", "Отмена"], 1)
+        f"Клиент: {application.client_name}\n"
+        f"id контакта: {application.contact_id}\n"
+        f"Причины заявки: {"; ".join(app_reasons)}\n"
+        f"Станок: {application.machine}\n"
+        f"Адрес: {application.address}\n"
+        f"Примерная дата ремонта: {application.est_repair_date}\n"
+        f"Примерное время ремонта: {application.est_repair_duration_hours}\n"
+        f"Заметки: {application.notes}\n",
+        reply_markup=render_inline_buttons(
+            {"confirm_app_add": "Подтвердить", "cancel_app_add": "Отмена"}, 1
+        )
     )
     await state.set_state(ApplicationState.add_app_confirmation)
 
 
-@router.callback_query(StateFilter(ApplicationState.add_app_confirmation), F.data == "Отмена")
+@router.callback_query(StateFilter(ApplicationState.add_app_confirmation), F.data == "cancel_app_add")
 async def add_app_confirmation_cancel(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer("Отменено")
-    await state.set_state(ApplicationState.choosing_app_repairer)
-    await callback_query.message.answer(states_strings[ApplicationState.choosing_app_repairer])
+    await state.set_state(ApplicationState.writing_app_notes)
+    await callback_query.message.answer(states_strings[ApplicationState.writing_app_notes])
 
 
-@router.callback_query(StateFilter(ApplicationState.add_app_confirmation), F.data == "Подтвердить")
+@router.callback_query(StateFilter(ApplicationState.add_app_confirmation), F.data == "confirm_app_add")
 async def add_app_confirmation(callback_query: CallbackQuery, state: FSMContext):
     app_data = await state.get_data()
 
-    app_data["editor_id"] = (
-        await db_workers.get_worker(callback_query.from_user.id)
-    ).id
+    app_data["editor_id"] = callback_query.from_user.id
     app_reasons: list[str] | None = app_data.get("app_reasons")
     if app_reasons is None:
         app_reasons = list()
@@ -282,3 +265,4 @@ async def add_app_confirmation(callback_query: CallbackQuery, state: FSMContext)
         text="Выберите действие",
         reply_markup=render_keyboard_buttons(base_commands, 2)
     )
+    await state.clear()

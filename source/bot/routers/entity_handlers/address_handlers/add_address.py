@@ -155,18 +155,18 @@ async def writing_notes(message: Message, state: FSMContext):
         f"Клиент: {address.client_name}\n"
         f"Часы работы: {address.workhours}\n"
         f"Заметки: {address.notes}\n",
-        reply_markup=render_inline_buttons(["Подтвердить", "Отмена"], 1)
+        reply_markup=render_inline_buttons({"confirm_addr_add": "Подтвердить", "cancel_addr_add": "Отмена"}, 1)
     )
 
 
-@router.callback_query(StateFilter(AddressState.add_address_confirmation), F.data == "Отмена")
+@router.callback_query(StateFilter(AddressState.add_address_confirmation), F.data == "cancel_addr_add")
 async def cancel_confirmation(callback_query: CallbackQuery, state: FSMContext):
     await state.set_state(AddressState.writing_notes)
     await callback_query.answer("Отменено")
     await callback_query.message.answer(states_strings[AddressState.writing_notes])
 
 
-@router.callback_query(StateFilter(AddressState.add_address_confirmation), F.data == "Подтвердить")
+@router.callback_query(StateFilter(AddressState.add_address_confirmation), F.data == "confirm_addr_add")
 async def add_address_confirmation(callback_query: CallbackQuery, state: FSMContext):
     address = AddressAdd.model_validate(await state.get_data(), from_attributes=True)
 
@@ -180,3 +180,4 @@ async def add_address_confirmation(callback_query: CallbackQuery, state: FSMCont
         "Выберите действие",
         reply_markup=render_keyboard_buttons(base_commands, 2)
     )
+    await state.clear()

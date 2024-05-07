@@ -25,7 +25,8 @@ async def search_workers(inline_query: InlineQuery):
             title=f"{machine.name}",
             input_message_content=InputTextMessageContent(
                 message_text=machine.name
-            )
+            ),
+            thumbnail_url="https://reiner-cnc.ru/upload/iblock/420/_0018_ER-00013929.jpg.jpg"
         ))
 
     await inline_query.answer(results, is_personal=True)

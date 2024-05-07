@@ -208,22 +208,22 @@ async def add_contact_phone_numbers(message: Message, state: FSMContext):
     await state.set_state(ContactState.add_contact_confirmation)
     await message.answer(
         f"ФИО: {contact.surname} {contact.name} {contact.patronymic}\n"
-        f"Компания: {contact.client}\n"
+        f"Компания: {contact.client_name}\n"
         f"Должность: {contact.company_position}\n"
         f"Email: {contact.email}\n"
         f"Телефоны: {contact.phone1} {contact.phone2} {contact.phone3}",
-        reply_markup=render_inline_buttons(["Подтвердить", "Отмена"], 1)
+        reply_markup=render_inline_buttons({"confirm_contact_add": "Подтвердить", "cancel_contact_add": "Отмена"}, 1)
     )
 
 
-@router.callback_query(StateFilter(ContactState.add_contact_confirmation), F.data == "Отмена")
+@router.callback_query(StateFilter(ContactState.add_contact_confirmation), F.data == "cancel_contact_add")
 async def cancel_confirmation(callback_query: CallbackQuery, state: FSMContext):
     await state.set_state(ContactState.writing_contact_phone_numbers)
     await callback_query.answer("Отменено")
     await callback_query.message.answer(states_strings[ContactState.writing_contact_phone_numbers])
 
 
-@router.callback_query(StateFilter(ContactState.add_contact_confirmation), F.data == "Подтвердить")
+@router.callback_query(StateFilter(ContactState.add_contact_confirmation), F.data == "confirm_contact_add")
 async def add_contact_confirmation(callback_query: CallbackQuery, state: FSMContext):
     contact_data = await state.get_data()
     contact = ContactAdd.model_validate(contact_data, from_attributes=True)
@@ -238,3 +238,4 @@ async def add_contact_confirmation(callback_query: CallbackQuery, state: FSMCont
         "Выберите действие",
         reply_markup=render_keyboard_buttons(base_commands, 2)
     )
+    await state.clear()

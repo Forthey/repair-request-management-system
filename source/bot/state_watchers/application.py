@@ -14,3 +14,8 @@ class ApplicationState(StatesGroup):
     writing_app_notes = State()
     choosing_app_repairer = State()
     add_app_confirmation = State()
+
+
+class TakeApplicationState(StatesGroup):
+    choosing_app_id = State()
+    take_app_confirmation = State()

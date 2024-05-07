@@ -1,4 +1,4 @@
-from sqlalchemy import select, update, delete, insert
+from sqlalchemy import select, update, delete, insert, or_, and_
 from sqlalchemy.exc import IntegrityError
 
 from database.engine import async_session_factory, AsyncSession
@@ -12,7 +12,7 @@ async def add_worker(worker: WorkerAdd) -> int | None:
         query = (
             insert(WorkerORM)
             .values(**worker.model_dump())
-            .returning(WorkerORM.id)
+            .returning(WorkerORM.telegram_id)
         )
 
         try:
@@ -33,14 +33,23 @@ async def get_workers() -> list[Worker]:
         return [Worker.model_validate(worker, from_attributes=True) for worker in workers_orm]
 
 
-async def search_workers(name: str) -> list[Worker]:
+async def search_workers(name: str, surname: str, patronymic: str | None) -> list[Worker]:
     session: AsyncSession
     async with async_session_factory() as session:
         query = (
             select(WorkerORM)
-            .where(WorkerORM.name.icontains(name))
+            .where(
+                and_(
+                    WorkerORM.surname.icontains(surname),
+                    WorkerORM.name.icontains(name)
+                )
+            )
+            .order_by(WorkerORM.surname)
             .order_by(WorkerORM.name)
         )
+
+        if patronymic is not None:
+            query = query.where(WorkerORM.patronymic.icontains(name))
 
         workers_orm = (await session.execute(query)).scalars().all()
 

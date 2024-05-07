@@ -15,14 +15,17 @@ router.inline_query.filter(
 
 @router.inline_query()
 async def search_workers(inline_query: InlineQuery):
-    name = " ".join(inline_query.query.split(" ")[1:])
+    args = inline_query.query.split(" ")[1:]
+    name = args[0] if len(args) > 0 else ""
+    surname = args[1] if len(args) > 1 else ""
+    patronymic = args[2] if len(args) > 2 else None
 
     results: list[InlineQueryResultArticle] = []
-    workers: list[Worker] = await w.search_workers(name)
+    workers: list[Worker] = await w.search_workers(name, surname, patronymic)
 
     for worker in workers:
         results.append(InlineQueryResultArticle(
-            id=worker.id.__str__(),
+            id=worker.telegram_id.__str__(),
             title=f"{worker.name} {worker.surname}",
             description=f"id в Телеграме: {worker.telegram_id}",
             input_message_content=InputTextMessageContent(

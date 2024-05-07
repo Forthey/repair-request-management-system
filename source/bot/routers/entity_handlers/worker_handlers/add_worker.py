@@ -134,13 +134,13 @@ async def add_access_rights(callback: CallbackQuery, state: FSMContext):
              f"Отчество: {worker.patronymic}\n"
              f"Права доступа: {worker.access_right}",
         parse_mode=ParseMode.MARKDOWN_V2,
-        reply_markup=render_inline_buttons(["Подтвердить"], 1)
+        reply_markup=render_inline_buttons({"confirm_worker_add": "Подтвердить"}, 1)
     )
 
     await state.set_state(WorkerState.add_worker_confirmation)
 
 
-@router.callback_query(StateFilter(WorkerState.add_worker_confirmation), F.data == "Подтвердить")
+@router.callback_query(StateFilter(WorkerState.add_worker_confirmation), F.data == "confirm_worker_add")
 async def confirm_worker(callback: CallbackQuery, state: FSMContext):
     worker_data = await state.get_data()
     worker = WorkerAdd.model_validate(worker_data, from_attributes=True)
@@ -148,8 +148,8 @@ async def confirm_worker(callback: CallbackQuery, state: FSMContext):
     if not await w.add_worker(worker):
         await callback.message.answer(
             text="Работник с таким именем уже существует",
-            reply_markup=render_keyboard_buttons(base_commands, 2)
         )
+        await state.set_state(WorkerState.choosing_worker_access_rights)
         return
 
     await fetch_workers()
@@ -169,7 +169,7 @@ async def confirm_worker(callback: CallbackQuery, state: FSMContext):
 @router.message(StateFilter(WorkerState.choosing_worker_access_rights))
 async def access_rights_chosen_incorrectly(message: Message, state: FSMContext):
     await message.answer(
-        text=f"Пожалуйста, выберите _права_ _доступа_",
+        text=f"Пожалуйста, выберите права доступа",
         parse_mode=ParseMode.MARKDOWN_V2,
         reply_markup=render_inline_buttons(tmp_access_rights, 2)
     )

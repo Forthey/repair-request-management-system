@@ -1,7 +1,7 @@
 import asyncio
 from database.queries.workers import get_workers
 
-tmp_access_rights = ["Админ", "Управление заявками", "Просмотр заявок", "Добавление метаданных"]
+tmp_access_rights = {"Админ": "Админ", "Работник": "Работник"}
 
 workers_id: list[int] = []
 

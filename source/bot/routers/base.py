@@ -43,7 +43,7 @@ async def cancel(message: Message, state: FSMContext):
     if state_str is None:
         await state.set_data({})
         await message.answer(
-            text="Нечего отменять",
+            text="Выберите действие",
             reply_markup=render_keyboard_buttons(base_commands, 2)
         )
         return

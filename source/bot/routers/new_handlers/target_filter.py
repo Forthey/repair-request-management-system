@@ -8,4 +8,6 @@ class TargetFilter(BaseFilter):
 
     async def __call__(self, message: Message) -> bool:  # [3]
         args = message.text.split(" ")[1:]
-        return args[0].lower() in self.target_strings
+        if args[0].lower() in self.target_strings:
+            return True
+        await message.answer(f"Сущности {args[0]} не существует")

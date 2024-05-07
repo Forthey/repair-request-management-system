@@ -1,3 +1,5 @@
+from types import NoneType
+
 from aiogram import Router, F
 from aiogram.filters import BaseFilter, StateFilter
 from aiogram.types import Message
@@ -35,8 +37,8 @@ class NewFilter(BaseFilter):  # [1]
 # Router
 router = Router()
 router.message.filter(
-    NewFilter(),
-    F.text
+    F.text,
+    NewFilter()
 )
 
 # Include sub routers
