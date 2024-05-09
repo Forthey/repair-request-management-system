@@ -14,7 +14,6 @@ class ApplicationORM(Base):
     __tablename__ = "applications"
 
     id: Mapped[IntPrimKey]
-    main_application_id: Mapped[int | None] = mapped_column(ForeignKey("applications.id"))
 
     created_at: Mapped[CreateDate]
 
@@ -59,3 +58,14 @@ class ApplicationORM(Base):
         foreign_keys=[contact_id],
         back_populates="applications"
     )
+
+
+class ApplicationChangeLogORM(Base):
+    __tablename__ = "applications_change_log"
+
+    id: Mapped[IntPrimKey]
+    application_id: Mapped[int] = mapped_column(ForeignKey("applications.id"))
+    field_name: Mapped[str]
+    old_value: Mapped[str]
+    new_value: Mapped[str | None]
+    date: Mapped[CreateDate]

@@ -6,8 +6,6 @@ from datetime import datetime
 
 
 class ApplicationAdd(BaseModel):
-    main_application_id: int | None = None
-
     est_repair_date: datetime | None = None
     est_repair_duration_hours: int | None = None
 
@@ -35,3 +33,15 @@ class Application(ApplicationAdd):
 class ApplicationFull(Application):
     contact: "Contact"
     reasons: list["ApplicationReason"]
+
+
+class ApplicationChangeLogAdd(BaseModel):
+    application_id: int
+    field_name: str
+    old_value: str
+    new_value: str | None
+
+
+class ApplicationChangeLog(ApplicationChangeLogAdd):
+    id: int
+    date: datetime

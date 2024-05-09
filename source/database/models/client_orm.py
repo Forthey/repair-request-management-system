@@ -16,7 +16,7 @@ class ClientORM(Base):
 
     name: Mapped[StrPrimKey]
     main_client_name: Mapped[str | None] = mapped_column(ForeignKey("clients.name"))
-    activity: Mapped[str] = mapped_column(ForeignKey("activities.name"))
+    activity: Mapped[str | None] = mapped_column(ForeignKey("activities.name"))
 
     notes: Mapped[str | None]
 
