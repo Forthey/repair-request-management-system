@@ -19,3 +19,15 @@ class ApplicationState(StatesGroup):
 class TakeApplicationState(StatesGroup):
     choosing_app_id = State()
     take_app_confirmation = State()
+
+
+class EditApplicationState(StatesGroup):
+    choosing_app_id = State()
+    waiting_for_click = State()
+    choosing_app_contact = State()
+    choosing_app_reasons = State()
+    choosing_app_machine = State()
+    choosing_app_address = State()
+    editing_app_est_repair_date_and_duration = State()
+    editing_app_notes = State()
+    edit_app_confirmation = State()

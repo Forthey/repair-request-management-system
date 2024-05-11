@@ -46,6 +46,7 @@ async def choosing_app_id(message: Message, state: FSMContext):
         f"id = {app.id}\n"
         f"Заявка создана: {app.created_at.date()}\n"
         f"id Клиента: {app.client_name}\n"
+        f"id Контакта: {app.contact_id}\n"
         f"Станок: {app.machine}\n"
         f"Адрес: {app.address}\n"
         f"Примерная дата ремонта: {
@@ -53,7 +54,7 @@ async def choosing_app_id(message: Message, state: FSMContext):
         }\n"
         f"Примерное время ремонта: {app.est_repair_duration_hours}ч.\n"
         f"Взято в работу: {"Да" if app.repairer_id is not None else "Нет"}",
-        reply_markup=render_inline_buttons({"confirm_take_app": "Подтвердить", "decline_take_app": "Отмена"}, 1)
+        reply_markup=render_inline_buttons({"confirm_take_app": "Взять заявку", "decline_take_app": "Выбрать другую"}, 1)
     )
     await state.set_state(TakeApplicationState.take_app_confirmation)
 

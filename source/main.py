@@ -22,8 +22,8 @@ async def main():
 
     bot_commands = [
         BotCommand(command="/help", description="Вывести подсказки"),
-        BotCommand(command="new", description="Добавление новой сущности"),
-        BotCommand(command="/delete", description="Удалить сущность"),
+        BotCommand(command="/new", description="Добавление новой сущности"),
+        BotCommand(command="/get_apps", description="Просмотреть заявки"),
     ]
     await bot.set_my_commands(bot_commands)
 

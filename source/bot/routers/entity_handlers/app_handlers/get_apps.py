@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.filters import StateFilter
+from aiogram.filters import StateFilter, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
@@ -84,18 +84,19 @@ async def get_all_apps(query: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "next_all_app_chunk")
 async def get_all_apps_offset_next(query: CallbackQuery, state: FSMContext):
     offset = (await state.get_data()).get("all_app_offset", 0)
-    await state.update_data(all_app_offset=offset + 5)
+    await state.update_data(all_app_offset=offset + 1)
     await get_all_apps(query, state)
 
 
 @router.callback_query(F.data == "prev_all_app_chunk")
 async def get_all_apps_offset_prev(query: CallbackQuery, state: FSMContext):
     offset = (await state.get_data()).get("all_app_offset", 0)
-    await state.update_data(all_app_offset=max(0, offset - 5))
+    await state.update_data(all_app_offset=max(0, offset - 1))
     await get_all_apps(query, state)
 
 
 @router.callback_query(F.data == "get_worker_apps")
+@router.callback_query(Command("get_apps"))
 async def get_all_apps_from_worker(query: CallbackQuery, state: FSMContext):
     offset = (await state.get_data()).get("worker_app_offset", 0)
     await state.update_data(worker_app_offset=offset)

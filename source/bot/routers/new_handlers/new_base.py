@@ -21,14 +21,14 @@ class NewFilter(BaseFilter):  # [1]
 
     async def __call__(self, message: Message) -> bool:  # [3]
         args = message.text.split(" ")
-        if args[0].lower() != "new":
+        if args[0].lower() != "/new":
             return False
         if len(args) < 3:
             await message.answer(
                 text="Недостаточно параметров для вызова new\n"
                      "Проверьте, что формат ввода верный\n"
                      "Например: new должность менеджер\n"
-                     "Для вывода подсказок по new напишите /help new"
+                     "Для вывода подсказок по new напишите /help new\n"
             )
             return False
         return True
