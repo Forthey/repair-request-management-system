@@ -17,9 +17,9 @@ import database.queries.contacts as db_contacts
 import database.queries.machines as db_machines
 import database.queries.addresses as db_addresses
 import database.queries.other as db_other
+from schemas.addresses import AddressAdd
 from schemas.applications import ApplicationAdd
-from schemas.clients import Client, ClientAdd
-from schemas.other import ApplicationReason
+from schemas.contacts import ContactAdd
 
 ApplicationAdd.model_rebuild()
 
@@ -36,15 +36,17 @@ states_strings: dict[str, str] = {
         "Введите имя клиента (компании), подавшего заявку",
     AddApplicationState.choosing_app_contact:
         "Введите id контакта, привязанного к клиенту "
-        "(или создайте новый контакт, используя команду new)",
+        "(или привяжите новый контакт к клиенту, используя команду /add:\n"
+        "/add ПримерФамилии +790012088\n"
+        "/add ПримерФамилии example@gmail.com)\n",
     AddApplicationState.choosing_app_reasons:
         "Введите причины подачи заявки (когда закончите - нажмите 'Далее')",
     AddApplicationState.choosing_app_machine:
         "Введите название станка",
     AddApplicationState.choosing_app_address:
         "Введите адрес, на который необходимо будет выехать "
-        "(или привяжите новые адрес к компании, используя команду new: "
-        "new адрес Пример Адреса)",
+        "(или привяжите новые адрес к компании, используя команду /add: "
+        "/add Пример Адреса)",
     AddApplicationState.writing_app_est_repair_date_and_duration:
         "Введите примерную дату ремонта (формат XX.XX.XXXX) "
         "и через пробел примерное время, необходимое на ремонт (в часах) "
@@ -92,15 +94,37 @@ async def choosing_app_contact(message: Message, state: FSMContext):
         return
 
     if message.text != "Далее":
-        contact_id = message.text
-        try:
-            contact_id = int(contact_id)
-        except ValueError:
-            await message.answer("Указан не id")
-            return
-        if not await db_contacts.contact_exists(int(contact_id)):
-            await message.answer("Контакта с таким id не существует")
-            return
+        contact_id = ""
+
+        args = message.text.split(" ")
+        if args[0] == "/add":
+            client_name = (await state.get_data()).get("client_name")
+            if client_name is None:
+                await message.answer("Не выбран клиент, невозможно добавить контакт")
+                return
+
+            contact: ContactAdd
+            if len(args) != 3:
+                await message.answer("Неправильный формат команды /add")
+                return
+            surname = args[1]
+            if re.match(r"[^@]+@[^@]+\.[^@]+", args[2]):
+                contact = ContactAdd(surname=surname, email=args[2], client_name=client_name)
+            else:
+                contact = ContactAdd(surname=surname, phone1=args[2], client_name=client_name)
+
+            contact_id = await db_contacts.add_contact(contact)
+        else:
+            contact_id = message.text
+            try:
+                contact_id = int(contact_id)
+            except ValueError:
+                await message.answer("Указан не id")
+                return
+            if not await db_contacts.contact_exists(int(contact_id)):
+                await message.answer("Контакта с таким id не существует")
+                return
+
         await state.update_data(contact_id=contact_id)
 
     await state.set_state(AddApplicationState.choosing_app_reasons)
@@ -158,10 +182,27 @@ async def choosing_app_address(message: Message, state: FSMContext):
         return
 
     if message.text != "Далее":
-        address = message.text
-        if not await db_addresses.address_exists(address):
-            await message.answer("Такого адреса не существует")
-            return
+        args = message.text.split(" ")
+        address: str
+        if args[0] == "/add":
+            client_name = (await state.get_data()).get("client_name")
+            if client_name is None:
+                await message.answer("Не выбран клиент, невозможно добавить контакт")
+                return
+
+            if len(args) == 1:
+                await message.answer("Неправильный формат команды /add")
+                return
+
+            address = " ".join(args[1:])
+            if not await db_addresses.add_address(AddressAdd(client_name=client_name, name=address)):
+                await message.answer("Такое адрес уже существует")
+                return
+        else:
+            address = message.text
+            if not await db_addresses.address_exists(address):
+                await message.answer("Такого адреса не существует")
+                return
 
         await state.update_data(address_name=address)
 

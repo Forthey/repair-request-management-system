@@ -5,6 +5,7 @@ from aiogram.filters import BaseFilter, StateFilter
 from aiogram.types import Message
 
 from bot.routers.new_handlers import (
+    add_client,
     add_machine,
     add_company_position,
     add_app_reason,
@@ -43,6 +44,7 @@ router.message.filter(
 
 # Include sub routers
 router.include_routers(
+    add_client.router,
     add_machine.router,
     add_company_position.router,
     add_app_reason.router,

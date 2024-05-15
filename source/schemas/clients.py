@@ -4,7 +4,7 @@ from pydantic import BaseModel
 class ClientAdd(BaseModel):
     name: str
     main_client_name: str | None = None
-    activity: str
+    activity: str | None = None
 
     notes: str | None = None
 

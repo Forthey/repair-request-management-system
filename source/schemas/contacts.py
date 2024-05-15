@@ -5,7 +5,7 @@ class ContactAdd(BaseModel):
     name: str | None = None
     surname: str
     patronymic: str | None = None
-    company_position: str
+    company_position: str | None = None
     client_name: str
 
     email: str | None = None
