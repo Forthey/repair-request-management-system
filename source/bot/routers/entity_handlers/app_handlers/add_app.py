@@ -8,7 +8,7 @@ from aiogram.types import Message, CallbackQuery
 from pydantic import ValidationError
 
 from bot.commands import base_commands
-from bot.state_watchers.application import ApplicationState
+from bot.states.application import AddApplicationState
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 from bot.utility.get_id_by_username import get_user_id
 import database.queries.applications as db_apps
@@ -16,7 +16,6 @@ import database.queries.clients as db_clients
 import database.queries.contacts as db_contacts
 import database.queries.machines as db_machines
 import database.queries.addresses as db_addresses
-import database.queries.workers as db_workers
 import database.queries.other as db_other
 from schemas.applications import ApplicationAdd
 from schemas.clients import Client, ClientAdd
@@ -33,24 +32,24 @@ commands = [
 ]
 
 states_strings: dict[str, str] = {
-    ApplicationState.choosing_app_client:
+    AddApplicationState.choosing_app_client:
         "Введите имя клиента (компании), подавшего заявку",
-    ApplicationState.choosing_app_contact:
+    AddApplicationState.choosing_app_contact:
         "Введите id контакта, привязанного к клиенту "
         "(или создайте новый контакт, используя команду new)",
-    ApplicationState.choosing_app_reasons:
+    AddApplicationState.choosing_app_reasons:
         "Введите причины подачи заявки (когда закончите - нажмите 'Далее')",
-    ApplicationState.choosing_app_machine:
+    AddApplicationState.choosing_app_machine:
         "Введите название станка",
-    ApplicationState.choosing_app_address:
+    AddApplicationState.choosing_app_address:
         "Введите адрес, на который необходимо будет выехать "
         "(или привяжите новые адрес к компании, используя команду new: "
         "new адрес Пример Адреса)",
-    ApplicationState.writing_app_est_repair_date_and_duration:
+    AddApplicationState.writing_app_est_repair_date_and_duration:
         "Введите примерную дату ремонта (формат XX.XX.XXXX) "
         "и через пробел примерное время, необходимое на ремонт (в часах) "
         "(Необязатльное поле)",
-    ApplicationState.writing_app_notes:
+    AddApplicationState.writing_app_notes:
         "Напишите допольнительную информацию, которую не удалось поместить в поля выше"
         "(Необязательное поле)",
 }
@@ -63,11 +62,11 @@ async def add_client(message: Message, state: FSMContext):
         reply_markup=render_keyboard_buttons(commands, 2)
     )
 
-    await message.answer(states_strings[ApplicationState.choosing_app_client])
-    await state.set_state(ApplicationState.choosing_app_client)
+    await message.answer(states_strings[AddApplicationState.choosing_app_client])
+    await state.set_state(AddApplicationState.choosing_app_client)
 
 
-@router.message(StateFilter(ApplicationState.choosing_app_client), F.text)
+@router.message(StateFilter(AddApplicationState.choosing_app_client), F.text)
 async def choosing_app_client(message: Message, state: FSMContext):
     if message.text == "Назад":
         await message.answer("Это первое поле")
@@ -81,15 +80,15 @@ async def choosing_app_client(message: Message, state: FSMContext):
 
         await state.update_data(client_name=client_name)
 
-    await state.set_state(ApplicationState.choosing_app_contact)
-    await message.answer(states_strings[ApplicationState.choosing_app_contact])
+    await state.set_state(AddApplicationState.choosing_app_contact)
+    await message.answer(states_strings[AddApplicationState.choosing_app_contact])
 
 
-@router.message(StateFilter(ApplicationState.choosing_app_contact), F.text)
+@router.message(StateFilter(AddApplicationState.choosing_app_contact), F.text)
 async def choosing_app_contact(message: Message, state: FSMContext):
     if message.text == "Назад":
-        await state.set_state(ApplicationState.choosing_app_client)
-        await message.answer(states_strings[ApplicationState.choosing_app_client])
+        await state.set_state(AddApplicationState.choosing_app_client)
+        await message.answer(states_strings[AddApplicationState.choosing_app_client])
         return
 
     if message.text != "Далее":
@@ -104,20 +103,20 @@ async def choosing_app_contact(message: Message, state: FSMContext):
             return
         await state.update_data(contact_id=contact_id)
 
-    await state.set_state(ApplicationState.choosing_app_reasons)
-    await message.answer(states_strings[ApplicationState.choosing_app_reasons])
+    await state.set_state(AddApplicationState.choosing_app_reasons)
+    await message.answer(states_strings[AddApplicationState.choosing_app_reasons])
 
 
-@router.message(StateFilter(ApplicationState.choosing_app_reasons), F.text)
+@router.message(StateFilter(AddApplicationState.choosing_app_reasons), F.text)
 async def choosing_app_reasons(message: Message, state: FSMContext):
     if message.text == "Назад":
-        await state.set_state(ApplicationState.choosing_app_contact)
-        await message.answer(states_strings[ApplicationState.choosing_app_contact])
+        await state.set_state(AddApplicationState.choosing_app_contact)
+        await message.answer(states_strings[AddApplicationState.choosing_app_contact])
         return
 
     if message.text == "Далее":
-        await state.set_state(ApplicationState.choosing_app_machine)
-        await message.answer(states_strings[ApplicationState.choosing_app_machine])
+        await state.set_state(AddApplicationState.choosing_app_machine)
+        await message.answer(states_strings[AddApplicationState.choosing_app_machine])
         return
 
     reason = message.text
@@ -132,11 +131,11 @@ async def choosing_app_reasons(message: Message, state: FSMContext):
     await state.update_data(app_reasons=reasons)
 
 
-@router.message(StateFilter(ApplicationState.choosing_app_machine), F.text)
+@router.message(StateFilter(AddApplicationState.choosing_app_machine), F.text)
 async def choosing_app_machine(message: Message, state: FSMContext):
     if message.text == "Назад":
-        await state.set_state(ApplicationState.choosing_app_reasons)
-        await message.answer(states_strings[ApplicationState.choosing_app_reasons])
+        await state.set_state(AddApplicationState.choosing_app_reasons)
+        await message.answer(states_strings[AddApplicationState.choosing_app_reasons])
         return
 
     if message.text != "Далее":
@@ -145,17 +144,17 @@ async def choosing_app_machine(message: Message, state: FSMContext):
             await message.answer("Такого станка не существует")
             return
 
-        await state.update_data(machine=machine)
+        await state.update_data(machine_name=machine)
 
-    await state.set_state(ApplicationState.choosing_app_address)
-    await message.answer(states_strings[ApplicationState.choosing_app_address])
+    await state.set_state(AddApplicationState.choosing_app_address)
+    await message.answer(states_strings[AddApplicationState.choosing_app_address])
 
 
-@router.message(StateFilter(ApplicationState.choosing_app_address), F.text)
+@router.message(StateFilter(AddApplicationState.choosing_app_address), F.text)
 async def choosing_app_address(message: Message, state: FSMContext):
     if message.text == "Назад":
-        await state.set_state(ApplicationState.choosing_app_machine)
-        await message.answer(states_strings[ApplicationState.choosing_app_machine])
+        await state.set_state(AddApplicationState.choosing_app_machine)
+        await message.answer(states_strings[AddApplicationState.choosing_app_machine])
         return
 
     if message.text != "Далее":
@@ -164,17 +163,17 @@ async def choosing_app_address(message: Message, state: FSMContext):
             await message.answer("Такого адреса не существует")
             return
 
-        await state.update_data(address=address)
+        await state.update_data(address_name=address)
 
-    await state.set_state(ApplicationState.writing_app_est_repair_date_and_duration)
-    await message.answer(states_strings[ApplicationState.writing_app_est_repair_date_and_duration])
+    await state.set_state(AddApplicationState.writing_app_est_repair_date_and_duration)
+    await message.answer(states_strings[AddApplicationState.writing_app_est_repair_date_and_duration])
 
 
-@router.message(StateFilter(ApplicationState.writing_app_est_repair_date_and_duration), F.text)
+@router.message(StateFilter(AddApplicationState.writing_app_est_repair_date_and_duration), F.text)
 async def writing_app_est_repair_date_and_duration(message: Message, state: FSMContext):
     if message.text == "Назад":
-        await state.set_state(ApplicationState.choosing_app_address)
-        await message.answer(states_strings[ApplicationState.choosing_app_address])
+        await state.set_state(AddApplicationState.choosing_app_address)
+        await message.answer(states_strings[AddApplicationState.choosing_app_address])
         return
 
     if message.text != "Далее":
@@ -189,15 +188,15 @@ async def writing_app_est_repair_date_and_duration(message: Message, state: FSMC
         if len(args) > 1:
             await state.update_data(est_repair_duration_hours=args[1])
 
-    await state.set_state(ApplicationState.writing_app_notes)
-    await message.answer(states_strings[ApplicationState.writing_app_notes])
+    await state.set_state(AddApplicationState.writing_app_notes)
+    await message.answer(states_strings[AddApplicationState.writing_app_notes])
 
 
-@router.message(StateFilter(ApplicationState.writing_app_notes), F.text)
+@router.message(StateFilter(AddApplicationState.writing_app_notes), F.text)
 async def writing_app_notes(message: Message, state: FSMContext):
     if message.text == "Назад":
-        await state.set_state(ApplicationState.writing_app_est_repair_date_and_duration)
-        await message.answer(states_strings[ApplicationState.writing_app_est_repair_date_and_duration])
+        await state.set_state(AddApplicationState.writing_app_est_repair_date_and_duration)
+        await message.answer(states_strings[AddApplicationState.writing_app_est_repair_date_and_duration])
         return
 
     if message.text != "Далее":
@@ -214,7 +213,7 @@ async def writing_app_notes(message: Message, state: FSMContext):
         print(app_data["app_reasons"])
         print(e)
         await message.answer("Заполнены не все обязательные поля")
-        await message.answer(states_strings[ApplicationState.writing_app_notes])
+        await message.answer(states_strings[AddApplicationState.writing_app_notes])
         return
 
     await message.answer(
@@ -230,17 +229,17 @@ async def writing_app_notes(message: Message, state: FSMContext):
             {"confirm_app_add": "Подтвердить", "cancel_app_add": "Отмена"}, 1
         )
     )
-    await state.set_state(ApplicationState.add_app_confirmation)
+    await state.set_state(AddApplicationState.add_app_confirmation)
 
 
-@router.callback_query(StateFilter(ApplicationState.add_app_confirmation), F.data == "cancel_app_add")
+@router.callback_query(StateFilter(AddApplicationState.add_app_confirmation), F.data == "cancel_app_add")
 async def add_app_confirmation_cancel(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer("Отменено")
-    await state.set_state(ApplicationState.writing_app_notes)
-    await callback_query.message.answer(states_strings[ApplicationState.writing_app_notes])
+    await state.set_state(AddApplicationState.writing_app_notes)
+    await callback_query.message.answer(states_strings[AddApplicationState.writing_app_notes])
 
 
-@router.callback_query(StateFilter(ApplicationState.add_app_confirmation), F.data == "confirm_app_add")
+@router.callback_query(StateFilter(AddApplicationState.add_app_confirmation), F.data == "confirm_app_add")
 async def add_app_confirmation(callback_query: CallbackQuery, state: FSMContext):
     app_data = await state.get_data()
 

@@ -122,6 +122,17 @@ async def search_close_reason(mask: str) -> list[CloseReason]:
         return [CloseReason.model_validate(reason, from_attributes=True) for reason in reasons_orm]
 
 
+async def find_close_reason(reason: str) -> bool:
+    session: AsyncSession
+    async with async_session_factory() as session:
+        query = (
+            select(CloseReasonORM)
+            .where(CloseReasonORM.name == reason)
+        )
+
+        return (await session.execute(query)).scalar_one_or_none() is not None
+
+
 async def add_company_activity(name: str) -> str | None:
     session: AsyncSession
     async with async_session_factory() as session:

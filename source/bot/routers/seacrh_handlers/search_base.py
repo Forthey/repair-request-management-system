@@ -11,7 +11,7 @@ from bot.routers.seacrh_handlers import (
     search_address,
     search_other
 )
-from bot.target_names import all_strings
+from bot.target_names import all_entity_strings
 
 router = Router()
 
@@ -19,7 +19,10 @@ router = Router()
 class InlineNonTargetFilter(BaseFilter):
     async def __call__(self, inline_query: InlineQuery) -> bool:
         args = inline_query.query.split(" ")
-        return len(args) == 1 and (args[0].lower() not in all_strings)
+        for key, entity_string in all_entity_strings.items():
+            if inline_query.query in entity_string:
+                return False
+        return len(args) == 1
 
 
 @router.inline_query(InlineNonTargetFilter())
@@ -27,15 +30,15 @@ async def suggest_targets(inline_query: InlineQuery):
     results: list[InlineQueryResultArticle] = []
     target = inline_query.query.split(" ")[0]
 
-    for string in all_strings:
-        if target == " " or target in string:
+    for key, entity_string in all_entity_strings.items():
+        if target == " " or target in entity_string[0]:
             results.append(InlineQueryResultArticle(
-                id=string,
+                id=entity_string[0],
                 type="article",
-                title=f"{string}",
-                description=f"подсказка по сущностям",
+                title=f"{"/".join(entity_string)}",
+                description=f"подсказка по сущностям, нажимать нет смысла",
                 input_message_content=InputTextMessageContent(
-                    message_text=f"/help search {string}"
+                    message_text=f"/help search {entity_string}"
                 )
             ))
 

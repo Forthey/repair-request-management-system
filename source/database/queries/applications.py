@@ -10,7 +10,7 @@ from database.models.application_orm import ApplicationORM, ApplicationChangeLog
 from database.models.other_orms import RelReasonApplicationORM
 from schemas.contacts import Contact
 from schemas.other import ApplicationReason
-from schemas.applications import ApplicationAdd, Application, ApplicationFull
+from schemas.applications import ApplicationAdd, Application, ApplicationFull, ApplicationWithReasons
 
 ApplicationFull.model_rebuild()
 
@@ -20,18 +20,18 @@ changeable_app_field_to_str = {
     "est_repair_duration_hours": "Примерная длительность ремонта",
     "client_name": "Клиент",
     "contact_id": "id Контакта",
-    "address": "Адрес",
-    "machine": "Станок",
+    "address_name": "Адрес",
+    "machine_name": "Станок",
     "notes": "Заметки"
 }
 
 
-async def get_applications(offset: int = 0, limit: int = 3, **params) -> list[ApplicationFull]:
+async def get_applications(offset: int = 0, limit: int = 3, **params) -> list[ApplicationWithReasons]:
     session: AsyncSession
     async with async_session_factory() as session:
         query = (
             select(ApplicationORM)
-            .options(selectinload(ApplicationORM.reasons), selectinload(ApplicationORM.contact))
+            .options(selectinload(ApplicationORM.reasons))
             .offset(offset)
             .limit(limit)
         )
@@ -48,20 +48,26 @@ async def get_applications(offset: int = 0, limit: int = 3, **params) -> list[Ap
 
         apps_orm = (await session.execute(query)).scalars().all()
 
-        return [ApplicationFull.model_validate(app, from_attributes=True) for app in apps_orm]
+        return [ApplicationWithReasons.model_validate(app, from_attributes=True) for app in apps_orm]
 
 
-async def get_application(app_id: int) -> Application | None:
+async def get_application(app_id: int) -> ApplicationFull | None:
     session: AsyncSession
     async with async_session_factory() as session:
         query = (
             select(ApplicationORM)
             .where(ApplicationORM.id == app_id)
+            .options(
+                selectinload(ApplicationORM.reasons),
+                selectinload(ApplicationORM.contact),
+                selectinload(ApplicationORM.machine),
+                selectinload(ApplicationORM.address)
+            )
         )
 
         app_orm = (await session.execute(query)).scalar_one_or_none()
 
-        return Application.model_validate(app_orm, from_attributes=True) if app_orm else None
+        return ApplicationFull.model_validate(app_orm, from_attributes=True) if app_orm else None
 
 
 async def search_applications(client_name_mask: str) -> list[Application]:
@@ -155,7 +161,7 @@ async def take_application(app_id: int, repairer_id: int) -> bool:
         return app_id is not None
 
 
-async def close_application(app_id: int, reason: str):
+async def close_application(app_id: int, reason: str) -> bool:
     session: AsyncSession
     async with async_session_factory() as session:
         close_date = datetime.datetime.now(datetime.UTC)
@@ -166,9 +172,13 @@ async def close_application(app_id: int, reason: str):
                 close_reason=reason,
                 closed_at=close_date
             )
+            .returning(ApplicationORM.id)
         )
 
-        await session.execute(query)
+        app_id = (await session.execute(query)).scalar_one_or_none()
+
+        if app_id is None:
+            return False
 
         log_query = (
             insert(ApplicationChangeLogORM)
@@ -183,6 +193,7 @@ async def close_application(app_id: int, reason: str):
         await session.execute(log_query)
 
         await session.commit()
+        return True
 
 
 async def add_application_log(app_id: int, field_name: str, old_value: str, new_value: str | None):

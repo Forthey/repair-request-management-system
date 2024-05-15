@@ -8,16 +8,19 @@ from database.engine import async_session_factory
 from database.models.machine_orm import MachineORM
 from schemas.machines import Machine
 
+# from yandex_disk_storage.base import upload_file
 
-async def add_machine(name: str, photo_url: str | None = None) -> bool:
-    print(photo_url)
+
+async def add_machine(name: str, file_id: str | None = None) -> bool:
+    # photo_url = await upload_file(f"{name}.jpg", photo) if photo is not None else None
+
     session: AsyncSession
     async with async_session_factory() as session:
         query = (
             insert(MachineORM)
             .values(
                 name=name,
-                photo_url=photo_url
+                photo_url=file_id
             )
             .returning(MachineORM.name)
         )

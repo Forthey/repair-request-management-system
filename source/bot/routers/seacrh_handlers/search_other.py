@@ -2,14 +2,14 @@ from aiogram import Router
 from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent
 
 from bot.routers.seacrh_handlers.inline_target_filter import InlineTargetFilter
-from bot.target_names import app_reason_strings, close_reason_strings, company_activity_strings, company_position_strings
+from bot.target_names import all_entity_strings
 from schemas.other import ApplicationReason, CloseReason, CompanyActivity, CompanyPosition
 import database.queries.other as o
 
 router = Router()
 
 
-@router.inline_query(InlineTargetFilter(app_reason_strings))
+@router.inline_query(InlineTargetFilter(all_entity_strings["app_reason_strings"]))
 async def search_app_reasons(inline_query: InlineQuery):
     name = " ".join(inline_query.query.split(" ")[1:])
 
@@ -28,7 +28,7 @@ async def search_app_reasons(inline_query: InlineQuery):
     await inline_query.answer(results, is_personal=True)
 
 
-@router.inline_query(InlineTargetFilter(close_reason_strings))
+@router.inline_query(InlineTargetFilter(all_entity_strings["close_reason_strings"]))
 async def search_close_reasons(inline_query: InlineQuery):
     name = " ".join(inline_query.query.split(" ")[1:])
 
@@ -47,7 +47,7 @@ async def search_close_reasons(inline_query: InlineQuery):
     await inline_query.answer(results, is_personal=True)
 
 
-@router.inline_query(InlineTargetFilter(company_activity_strings))
+@router.inline_query(InlineTargetFilter(all_entity_strings["company_activity_strings"]))
 async def search_company_activity(inline_query: InlineQuery):
     name = " ".join(inline_query.query.split(" ")[1:])
 
@@ -66,7 +66,7 @@ async def search_company_activity(inline_query: InlineQuery):
     await inline_query.answer(results, is_personal=True)
 
 
-@router.inline_query(InlineTargetFilter(company_position_strings))
+@router.inline_query(InlineTargetFilter(all_entity_strings["company_position_strings"]))
 async def search_company_position(inline_query: InlineQuery):
     name = " ".join(inline_query.query.split(" ")[1:])
 

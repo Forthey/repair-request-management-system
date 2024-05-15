@@ -4,7 +4,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from bot.state_watchers.worker import WorkerState
+from bot.states.worker import WorkerState
 
 from bot.utility.get_id_by_username import get_user_id
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons

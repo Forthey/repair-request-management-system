@@ -26,8 +26,8 @@ class ApplicationORM(Base):
     client_name: Mapped[int | None] = mapped_column(ForeignKey("clients.name", ondelete="SET NULL"))
     contact_id: Mapped[int | None] = mapped_column(ForeignKey("contacts.id", ondelete="SET NULL"))
 
-    address: Mapped[str | None] = mapped_column(ForeignKey("addresses.name", ondelete="SET NULL"))
-    machine: Mapped[str | None] = mapped_column(ForeignKey("machines.name", ondelete="SET NULL"))
+    address_name: Mapped[str | None] = mapped_column(ForeignKey("addresses.name", ondelete="SET NULL"))
+    machine_name: Mapped[str | None] = mapped_column(ForeignKey("machines.name", ondelete="SET NULL"))
 
     closed_at: Mapped[datetime | None]
     close_reason: Mapped[str | None] = mapped_column(ForeignKey("close_reasons.name", ondelete="SET NULL"))
@@ -49,12 +49,16 @@ class ApplicationORM(Base):
         back_populates="applications"
     )
 
+    address: Mapped[Optional["AddressORM"]] = relationship()
+
+    machine: Mapped[Optional["MachineORM"]] = relationship()
+
     repairer: Mapped[Optional["WorkerORM"]] = relationship(
         foreign_keys=[repairer_id],
         back_populates="taken_applications"
     )
 
-    contact: Mapped["ContactORM"] = relationship(
+    contact: Mapped[Optional["ContactORM"]] = relationship(
         foreign_keys=[contact_id],
         back_populates="applications"
     )
@@ -66,6 +70,6 @@ class ApplicationChangeLogORM(Base):
     id: Mapped[IntPrimKey]
     application_id: Mapped[int] = mapped_column(ForeignKey("applications.id"))
     field_name: Mapped[str]
-    old_value: Mapped[str]
+    old_value: Mapped[str | None]
     new_value: Mapped[str | None]
     date: Mapped[CreateDate]

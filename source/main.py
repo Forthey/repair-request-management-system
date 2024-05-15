@@ -26,7 +26,6 @@ async def main():
         BotCommand(command="/get_apps", description="Просмотреть заявки"),
     ]
     await bot.set_my_commands(bot_commands)
-
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 

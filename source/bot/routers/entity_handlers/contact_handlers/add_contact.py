@@ -7,7 +7,7 @@ from aiogram.types import Message, CallbackQuery
 from pydantic import ValidationError
 
 from bot.commands import base_commands
-from bot.state_watchers.contact import ContactState
+from bot.states.contact import ContactState
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 import database.queries.contacts as db_contacts
 import database.queries.clients as db_clients

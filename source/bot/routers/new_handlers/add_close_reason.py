@@ -2,13 +2,13 @@ from aiogram import Router
 from aiogram.types import Message
 
 from bot.routers.new_handlers.target_filter import TargetFilter
-from bot.target_names import close_reason_strings
+from bot.target_names import all_entity_strings
 from database.queries.other import add_close_reason
 
 # Router
 router = Router()
 router.message.filter(
-    TargetFilter(close_reason_strings)
+    TargetFilter(all_entity_strings["close_reason_strings"])
 )
 
 

@@ -10,4 +10,3 @@ class TargetFilter(BaseFilter):
         args = message.text.split(" ")[1:]
         if args[0].lower() in self.target_strings:
             return True
-        await message.answer(f"Сущности {args[0]} не существует")

@@ -1,8 +1,7 @@
 from aiogram.fsm.state import StatesGroup, State
-from bot.state_watchers.machine import MachineState
 
 
-class ApplicationState(StatesGroup):
+class AddApplicationState(StatesGroup):
     # Add application
     choosing_app_main_application = State()
     choosing_app_client = State()
@@ -16,13 +15,15 @@ class ApplicationState(StatesGroup):
     add_app_confirmation = State()
 
 
-class TakeApplicationState(StatesGroup):
+class ChooseOneApplicationState(StatesGroup):
     choosing_app_id = State()
-    take_app_confirmation = State()
+    chosen_app_confirmation = State()
+    writing_app_close_reason = State()
 
 
 class EditApplicationState(StatesGroup):
     choosing_app_id = State()
+    waiting_for_choose_confirmation = State()
     waiting_for_click = State()
     choosing_app_contact = State()
     choosing_app_reasons = State()

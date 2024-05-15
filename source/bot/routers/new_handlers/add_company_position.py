@@ -3,14 +3,14 @@ from aiogram.filters import Command, BaseFilter
 from aiogram.types import Message
 
 from bot.routers.new_handlers.target_filter import TargetFilter
-from bot.target_names import company_position_strings
+from bot.target_names import all_entity_strings
 from database.queries.other import add_company_position
 
 
 # Router
 router = Router()
 router.message.filter(
-    TargetFilter(company_position_strings)
+    TargetFilter(all_entity_strings["company_position_strings"])
 )
 
 

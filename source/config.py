@@ -9,6 +9,11 @@ class Settings(BaseSettings):
     TG_API_ID: int
     TG_API_HASH: str
 
+    YANDEX_CLIENT_ID: str
+    YANDEX_CLIENT_SECRET: str
+    YANDEX_TOKEN: str
+    YANDEX_DIR_PUBLIC_KEY: str
+
     DB_POSTGRES_HOST: str
     DB_POSTGRES_PORT: int
     DB_POSTGRES_USER: str

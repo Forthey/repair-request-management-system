@@ -22,5 +22,6 @@ def render_inline_buttons(item_list: dict[str, str], num_in_row: int) -> InlineK
             text=item_list[key],
             callback_data=key
         ))
+        i += 1
 
     return InlineKeyboardBuilder(buttons).as_markup()

@@ -2,6 +2,7 @@ aiogram==3.4.1
 telethon==1.34.0
 
 yadisk[async_defaults]==2.1.0
+wldhx.yadisk-direct==0.0.6
 aiofiles==23.2.1
 
 pydantic==2.6.4

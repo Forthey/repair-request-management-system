@@ -4,6 +4,10 @@ from pydantic import BaseModel
 
 from datetime import datetime
 
+from schemas.machines import Machine
+from schemas.addresses import Address
+from schemas.other import ApplicationReason
+
 
 class ApplicationAdd(BaseModel):
     est_repair_date: datetime | None = None
@@ -15,8 +19,8 @@ class ApplicationAdd(BaseModel):
     client_name: str
     contact_id: int | None = None
 
-    address: str
-    machine: str
+    address_name: str
+    machine_name: str
 
     notes: str | None = None
 
@@ -26,13 +30,18 @@ class Application(ApplicationAdd):
 
     created_at: datetime
 
-    closed_at: int | None
+    closed_at: datetime | None
     close_reason: str | None
 
 
-class ApplicationFull(Application):
-    contact: "Contact"
+class ApplicationWithReasons(Application):
     reasons: list["ApplicationReason"]
+
+
+class ApplicationFull(ApplicationWithReasons):
+    machine: Optional["Machine"]
+    address: Optional["Address"]
+    contact: Optional["Contact"]
 
 
 class ApplicationChangeLogAdd(BaseModel):

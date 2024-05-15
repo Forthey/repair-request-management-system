@@ -2,14 +2,14 @@ from aiogram import Router
 from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessageContent
 
 from bot.routers.seacrh_handlers.inline_target_filter import InlineTargetFilter
-from bot.target_names import contact_strings
+from bot.target_names import all_entity_strings
 from schemas.contacts import Contact
 import database.queries.contacts as con
 
 
 router = Router()
 router.inline_query.filter(
-    InlineTargetFilter(contact_strings)
+    InlineTargetFilter(all_entity_strings["contact_strings"])
 )
 
 

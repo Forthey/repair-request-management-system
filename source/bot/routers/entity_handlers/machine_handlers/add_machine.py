@@ -8,7 +8,7 @@ from aiogram.types import Message, ReplyKeyboardMarkup, CallbackQuery, \
     InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from bot.state_watchers.machine import MachineState
+from bot.states.machine import MachineState
 
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 from bot.commands import base_commands
@@ -40,13 +40,15 @@ async def add_begin(message: Message, state: FSMContext):
 
 
 @router.message(StateFilter(MachineState.writing_machine_name), F.photo)
-async def add_name_with_photo(message: Message, state: FSMContext):
+async def add_name_with_photo(message: Message, state: FSMContext, bot):
     name = message.caption
     if len(name) < 3:
         await message.answer("Имя станка слишком короткое")
         return
-    photo_id = message.photo[0].file_id
-    if not await add_machine(name, photo_id):
+    file_id = message.photo[0].file_id
+    # file_info = await bot.get_file(file_id)
+    # downloaded_file = await bot.download_file(file_info.file_path)
+    if not await add_machine(name, file_id):
         await message.answer(
             text="Такой станок уже существует"
         )
