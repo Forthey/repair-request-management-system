@@ -42,7 +42,7 @@ async def suggest_targets(inline_query: InlineQuery):
                 )
             ))
 
-    await inline_query.answer(results, is_personal=True)
+    await inline_query.answer(results, cache_time=3)
 
 
 router.include_routers(

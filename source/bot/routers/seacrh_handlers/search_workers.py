@@ -33,4 +33,4 @@ async def search_workers(inline_query: InlineQuery):
             )
         ))
 
-    await inline_query.answer(results, is_personal=True)
+    await inline_query.answer(results, is_personal=True, cache_time=3)

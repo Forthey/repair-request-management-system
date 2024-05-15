@@ -32,4 +32,4 @@ async def search_clients_handler(inline_query: InlineQuery):
             )
         ))
 
-    await inline_query.answer(results, is_personal=True)
+    await inline_query.answer(results, is_personal=True, cache_time=3)

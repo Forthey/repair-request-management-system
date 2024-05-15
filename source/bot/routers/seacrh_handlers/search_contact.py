@@ -19,8 +19,8 @@ async def search_clients_handler(inline_query: InlineQuery):
     argc_len = len(args)
 
     client = args[0] if argc_len > 0 else ""
-    surname = args[1] if argc_len > 1 else ""
-    company_position = args[2] if argc_len > 2 else ""
+    surname = args[1] if argc_len > 1 else None
+    company_position = args[2] if argc_len > 2 else None
 
     results: list[InlineQueryResultArticle] = []
     contacts: list[Contact] = await con.search_contacts(client, surname, company_position)
@@ -37,4 +37,4 @@ async def search_clients_handler(inline_query: InlineQuery):
             )
         ))
 
-    await inline_query.answer(results, is_personal=True)
+    await inline_query.answer(results, cache_time=3)
