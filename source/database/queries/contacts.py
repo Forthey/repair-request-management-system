@@ -47,10 +47,13 @@ async def search_contacts(client: str,
             select(ContactORM)
             .where(
                 ContactORM.client_name.icontains(client),
-                ContactORM.surname.icontains(surname or ""),
-                ContactORM.company_position.icontains(company_position or "")
             )
         )
+
+        if surname is not None:
+            query = query.where(ContactORM.surname.icontains(surname))
+        if company_position is not None:
+            query = query.where(ContactORM.company_position.icontains(company_position))
 
         contacts_orm = (await session.execute(query)).scalars().all()
 
