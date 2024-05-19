@@ -44,14 +44,33 @@ async def find_machine(name: str) -> bool:
         return (await session.execute(query)).scalar_one_or_none() is not None
 
 
-async def search_machines(name: str) -> list[Machine]:
+async def search_machines(args: list[str]) -> list[Machine]:
     session: AsyncSession
     async with async_session_factory() as session:
+        if len(args) == 0:
+            query = (
+                select(MachineORM)
+                .order_by(MachineORM.name)
+                .limit(50)
+            )
+            machines_orm = (await session.execute(query)).scalars().all()
+
+            return [Machine.model_validate(address, from_attributes=True) for address in machines_orm]
+
         query = (
             select(MachineORM)
-            .where(MachineORM.name.icontains(name))
+            .where(MachineORM.name.icontains(args[0]))
+            .order_by(MachineORM.name)
         )
 
         machines_orm = (await session.execute(query)).scalars().all()
 
-        return [Machine.model_validate(machine, from_attributes=True) for machine in machines_orm]
+        machines: list[Machine] = []
+        for machine in machines_orm:
+            for arg in args:
+                if arg not in machine.name:
+                    break
+                machines.append(Machine.model_validate(machine, from_attributes=True))
+                break
+
+        return machines

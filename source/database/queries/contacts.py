@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -38,26 +38,54 @@ async def add_contact(contact: ContactAdd) -> int | None:
             return None
 
 
-async def search_contacts(client: str,
-                          surname: str | None,
-                          company_position: str | None) -> list[Contact]:
+async def search_contacts(args: list[str]) -> list[Contact]:
     session: AsyncSession
     async with async_session_factory() as session:
+        if len(args) == 0:
+            query = (
+                select(ContactORM)
+                .order_by(ContactORM.name)
+                .order_by(ContactORM.surname)
+                .order_by(ContactORM.patronymic)
+                .limit(50)
+            )
+
+            contacts = (await session.execute(query)).scalars().all()
+
+            return [Contact.model_validate(contact, from_attributes=True) for contact in contacts]
+
         query = (
             select(ContactORM)
             .where(
-                ContactORM.client_name.icontains(client),
+                or_(
+                    ContactORM.client_name.icontains(args[0]),
+                    ContactORM.name.icontains(args[0]),
+                    ContactORM.surname.icontains(args[0]),
+                    ContactORM.patronymic.icontains(args[0]),
+                    ContactORM.company_position.icontains(args[0])
+                )
             )
+            .order_by(ContactORM.name)
+            .order_by(ContactORM.surname)
+            .order_by(ContactORM.patronymic)
         )
 
-        if surname is not None:
-            query = query.where(ContactORM.surname.icontains(surname))
-        if company_position is not None:
-            query = query.where(ContactORM.company_position.icontains(company_position))
-
         contacts_orm = (await session.execute(query)).scalars().all()
+        print(contacts_orm)
 
-        return [Contact.model_validate(contact, from_attributes=True) for contact in contacts_orm]
+        contacts: list[Contact] = []
+        for contact in contacts_orm:
+            for arg in args:
+                if arg not in contact.client_name and \
+                        arg not in str(contact.name) and \
+                        arg not in str(contact.surname) and \
+                        arg not in str(contact.patronymic) and \
+                        arg not in str(contact.company_position):
+                    break
+                contacts.append(Contact.model_validate(contact, from_attributes=True))
+                break
+
+        return contacts
 
 
 async def contact_exists(contact_id: int) -> bool:

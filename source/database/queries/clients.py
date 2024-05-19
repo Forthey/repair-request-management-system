@@ -37,14 +37,33 @@ async def name_exists(name: str) -> bool:
         return (await session.execute(query)).scalar_one() == 1
 
 
-async def search_clients(mask: str) -> list[Client]:
+async def search_clients(args: list[str]) -> list[Client]:
     session: AsyncSession
     async with async_session_factory() as session:
+        if len(args) == 0:
+            query = (
+                select(ClientORM)
+                .order_by(ClientORM.name)
+                .limit(50)
+            )
+            clients_orm = (await session.execute(query)).scalars().all()
+
+            return [Client.model_validate(address, from_attributes=True) for address in clients_orm]
+
         query = (
             select(ClientORM)
-            .where(ClientORM.name.icontains(mask))
+            .where(ClientORM.name.icontains(args[0]))
+            .order_by(ClientORM.name)
         )
 
         clients_orm = (await session.execute(query)).scalars().all()
 
-        return [Client.model_validate(client, from_attributes=True) for client in clients_orm]
+        clients: list[Client] = []
+        for client in clients_orm:
+            for arg in args:
+                if arg not in client.name:
+                    continue
+                clients.append(Client.model_validate(client, from_attributes=True))
+                break
+
+        return clients

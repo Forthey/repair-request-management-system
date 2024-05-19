@@ -14,13 +14,11 @@ router.inline_query.filter(
 
 
 @router.inline_query()
-async def search_clients_handler(inline_query: InlineQuery):
-    address_name = " ".join(inline_query.query.split(" ")[1:])
-
-    print(address_name)
+async def search_adresses_handler(inline_query: InlineQuery):
+    address_args = inline_query.query.split(" ")[1:]
 
     results: list[InlineQueryResultArticle] = []
-    addresses: list[Address] = await addr.search_addresses(address_name)
+    addresses: list[Address] = await addr.search_addresses(address_args)
 
     for address in addresses:
         results.append(InlineQueryResultArticle(

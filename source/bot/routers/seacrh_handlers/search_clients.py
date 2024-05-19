@@ -15,10 +15,10 @@ router.inline_query.filter(
 
 @router.inline_query()
 async def search_clients_handler(inline_query: InlineQuery):
-    name = " ".join(inline_query.query.split(" ")[1:])
+    client_args = inline_query.query.split(" ")[1:]
 
     results: list[InlineQueryResultArticle] = []
-    clients: list[Client] = await c.search_clients(name)
+    clients: list[Client] = await c.search_clients(client_args)
 
     for client in clients:
         results.append(InlineQueryResultArticle(

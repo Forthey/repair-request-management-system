@@ -10,7 +10,8 @@ from database.models.application_orm import ApplicationORM, ApplicationChangeLog
 from database.models.other_orms import RelReasonApplicationORM
 from schemas.contacts import Contact
 from schemas.other import ApplicationReason
-from schemas.applications import ApplicationAdd, Application, ApplicationFull, ApplicationWithReasons
+from schemas.applications import ApplicationAdd, Application, ApplicationFull, ApplicationWithReasons, \
+    ApplicationChangeLog
 
 ApplicationFull.model_rebuild()
 
@@ -32,6 +33,8 @@ async def get_applications(offset: int = 0, limit: int = 3, **params) -> list[Ap
         query = (
             select(ApplicationORM)
             .options(selectinload(ApplicationORM.reasons))
+            .order_by(ApplicationORM.closed_at.desc())
+            .order_by(ApplicationORM.created_at.desc())
             .offset(offset)
             .limit(limit)
         )
@@ -70,17 +73,46 @@ async def get_application(app_id: int) -> ApplicationFull | None:
         return ApplicationFull.model_validate(app_orm, from_attributes=True) if app_orm else None
 
 
-async def search_applications(client_name_mask: str) -> list[Application]:
+async def search_applications(args: list[str]) -> list[Application]:
     session: AsyncSession
     async with async_session_factory() as session:
+        if len(args) == 0:
+            query = (
+                select(ApplicationORM)
+                .order_by(ApplicationORM.id.desc())
+                .limit(50)
+            )
+
+            apps_orm = (await session.execute(query)).scalars().all()
+
+            return [Application.model_validate(app, from_attributes=True) for app in apps_orm]
+
         query = (
             select(ApplicationORM)
-            .where(ApplicationORM.client_name.icontains(client_name_mask))
+            .where(
+                or_(
+                    ApplicationORM.client_name.icontains(args[0]),
+                    ApplicationORM.machine_name.icontains(args[0]),
+                    ApplicationORM.address_name.icontains(args[0])
+                )
+            )
+            .order_by(ApplicationORM.id.desc())
         )
 
         apps_orm = (await session.execute(query)).scalars().all()
 
-        return [Application.model_validate(app, from_attributes=True) for app in apps_orm]
+        apps: list[Application] = []
+
+        for app in apps_orm:
+            for arg in args:
+                if arg not in str(app.client_name) and \
+                        arg not in str(app.machine_name) and \
+                        arg not in str(app.address_name):
+                    continue
+                apps.append(Application.model_validate(app, from_attributes=True))
+                break
+
+        return apps
 
 
 async def add_application(application: ApplicationAdd, app_reasons: list[str]) -> int | None:
@@ -212,3 +244,16 @@ async def add_application_log(app_id: int, field_name: str, old_value: str, new_
         await session.execute(query)
 
         await session.commit()
+
+
+async def get_application_logs(app_id: int) -> list[ApplicationChangeLog]:
+    session: AsyncSession
+    async with async_session_factory() as session:
+        query = (
+            select(ApplicationChangeLogORM)
+            .where(ApplicationChangeLogORM.application_id == app_id)
+        )
+
+        change_logs_orm = (await session.execute(query)).scalars().all()
+
+        return [ApplicationChangeLog.model_validate(change_log, from_attributes=True) for change_log in change_logs_orm]

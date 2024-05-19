@@ -33,27 +33,53 @@ async def get_workers() -> list[Worker]:
         return [Worker.model_validate(worker, from_attributes=True) for worker in workers_orm]
 
 
-async def search_workers(name: str, surname: str, patronymic: str | None) -> list[Worker]:
+async def search_workers(args: list[str]) -> list[Worker]:
     session: AsyncSession
     async with async_session_factory() as session:
+        if len(args) == 0:
+            query = (
+                select(WorkerORM)
+                .order_by(WorkerORM.surname)
+                .order_by(WorkerORM.name)
+                .order_by(WorkerORM.patronymic)
+                .limit(50)
+            )
+
+            workers_orm = (await session.execute(query)).scalars().all()
+
+            return [Worker.model_validate(worker_orm, from_attributes=True) for worker_orm in workers_orm]
+
         query = (
             select(WorkerORM)
             .where(
-                and_(
-                    WorkerORM.surname.icontains(surname),
-                    WorkerORM.name.icontains(name)
+                or_(
+                    WorkerORM.surname.icontains(args[0]),
+                    WorkerORM.name.icontains(args[0]),
+                    WorkerORM.patronymic.icontains(args[0]),
+                    WorkerORM.access_right.icontains(args[0])
                 )
             )
             .order_by(WorkerORM.surname)
             .order_by(WorkerORM.name)
+            .order_by(WorkerORM.patronymic)
+            .limit(50)
         )
-
-        if patronymic is not None:
-            query = query.where(WorkerORM.patronymic.icontains(name))
 
         workers_orm = (await session.execute(query)).scalars().all()
 
-        return [Worker.model_validate(worker_orm, from_attributes=True) for worker_orm in workers_orm]
+        workers: list[Worker] = []
+        for worker in workers_orm:
+            for arg in args:
+                if arg not in worker.surname and \
+                        arg not in worker.name and \
+                        arg not in str(worker.patronymic) and \
+                        arg not in worker.access_right:
+                    break
+
+                workers.append(Worker.model_validate(worker, from_attributes=True))
+                break
+
+        return workers
 
 
 async def get_worker(telegram_id: int) -> Worker | None:

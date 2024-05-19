@@ -251,8 +251,6 @@ async def writing_app_notes(message: Message, state: FSMContext):
     try:
         application = ApplicationAdd.model_validate(app_data)
     except ValidationError as e:
-        print(app_data["app_reasons"])
-        print(e)
         await message.answer("Заполнены не все обязательные поля")
         await message.answer(states_strings[AddApplicationState.writing_app_notes])
         return
@@ -261,8 +259,8 @@ async def writing_app_notes(message: Message, state: FSMContext):
         f"Клиент: {application.client_name}\n"
         f"id контакта: {application.contact_id}\n"
         f"Причины заявки: {"; ".join(app_reasons)}\n"
-        f"Станок: {application.machine}\n"
-        f"Адрес: {application.address}\n"
+        f"Станок: {application.machine_name}\n"
+        f"Адрес: {application.address_name}\n"
         f"Примерная дата ремонта: {application.est_repair_date}\n"
         f"Примерное время ремонта: {application.est_repair_duration_hours}\n"
         f"Заметки: {application.notes}\n",

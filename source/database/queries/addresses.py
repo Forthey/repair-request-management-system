@@ -37,14 +37,33 @@ async def address_exists(address: str) -> bool:
         return (await session.execute(query)).scalar_one() == 1
 
 
-async def search_addresses(mask: str) -> list[Address]:
+async def search_addresses(args: list[str]) -> list[Address]:
     session: AsyncSession
     async with async_session_factory() as session:
+        if len(args) == 0:
+            query = (
+                select(AddressORM)
+                .order_by(AddressORM.name)
+                .limit(50)
+            )
+            addresses_orm = (await session.execute(query)).scalars().all()
+
+            return [Address.model_validate(address, from_attributes=True) for address in addresses_orm]
+
         query = (
             select(AddressORM)
-            .where(AddressORM.name.icontains(mask))
+            .where(AddressORM.name.icontains(args[0]))
+            .order_by(AddressORM.name)
         )
 
         addresses_orm = (await session.execute(query)).scalars().all()
 
-        return [Address.model_validate(address, from_attributes=True) for address in addresses_orm]
+        addresses: list[Address] = []
+        for address in addresses_orm:
+            for arg in args:
+                if arg not in address.name:
+                    continue
+                addresses.append(Address.model_validate(address, from_attributes=True))
+                break
+
+        return addresses

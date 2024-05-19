@@ -47,7 +47,7 @@ class ApplicationFull(ApplicationWithReasons):
 class ApplicationChangeLogAdd(BaseModel):
     application_id: int
     field_name: str
-    old_value: str
+    old_value: str | None
     new_value: str | None
 
 

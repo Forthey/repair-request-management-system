@@ -15,10 +15,10 @@ router.inline_query.filter(
 
 @router.inline_query()
 async def search_machines_inline(inline_query: InlineQuery):
-    name = " ".join(inline_query.query.split(" ")[1:])
+    machine_args = inline_query.query.split(" ")[1:]
 
     results: list[InlineQueryResultArticle] = []
-    machines: list[Machine] = await search_machines(name)
+    machines: list[Machine] = await search_machines(machine_args)
 
     for machine in machines:
         results.append(InlineQueryResultArticle(

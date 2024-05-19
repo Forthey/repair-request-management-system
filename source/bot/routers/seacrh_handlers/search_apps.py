@@ -14,16 +14,16 @@ router.inline_query.filter(
 
 @router.inline_query()
 async def search_apps(inline_query: InlineQuery):
-    client = " ".join(inline_query.query.split(" ")[1:])
+    app_args = inline_query.query.split(" ")[1:]
 
     results: list[InlineQueryResultArticle] = []
-    apps: list[Application] = await app.search_applications(client)
+    apps: list[Application] = await app.search_applications(app_args)
 
     for application in apps:
         results.append(InlineQueryResultArticle(
             id=application.id.__str__(),
-            title=f"{application.client_name} от {application.created_at.date()}",
-            description=f"id: {application.id}, станок: {application.machine}",
+            title=f"'{application.client_name}' ({application.created_at.date()})",
+            description=f"id: {application.id}, станок: {application.machine_name}",
             input_message_content=InputTextMessageContent(
                 message_text=application.id.__str__()
             )

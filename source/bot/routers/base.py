@@ -12,13 +12,14 @@ from bot.routers.new_handlers import new_base
 from bot.routers.seacrh_handlers import search_base
 from bot.routers.help_handlers import help_base
 from bot.routers.entity_handlers.app_handlers import app_base
-from bot.routers.entity_handlers.worker_handlers import workers_base
 from bot.routers.entity_handlers.machine_handlers import machines_base
 from bot.routers.entity_handlers.client_handlers import client_base
 from bot.routers.entity_handlers.contact_handlers import contact_base
 from bot.routers.entity_handlers.address_handlers import address_base
+
+from bot.routers.admin import admin_base
 # Commands
-from bot.commands import base_commands
+from bot.commands import base_commands, admin_base_commands
 
 
 router = Router()
@@ -65,9 +66,9 @@ router.include_routers(
     search_base.router,
     help_base.router,
     app_base.router,
-    workers_base.router,
     machines_base.router,
     client_base.router,
     contact_base.router,
-    address_base.router
+    address_base.router,
+    admin_base.router
 )

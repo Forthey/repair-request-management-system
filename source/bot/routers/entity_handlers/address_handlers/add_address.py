@@ -88,44 +88,37 @@ async def choosing_client(message: Message, state: FSMContext):
     await message.answer(states_strings[AddressState.choosing_photo])
 
 
-@router.message(StateFilter(AddressState.choosing_photo))
+@router.message(StateFilter(AddressState.choosing_photo), F.photo)
 async def choosing_photo(message: Message, state: FSMContext):
-    if message.text == "Далее":
-        await state.set_state(AddressState.writing_workhours)
-        await message.answer(states_strings[AddressState.writing_workhours])
-        return
-
     if message.text == "Назад":
         await state.set_state(AddressState.choosing_client)
         await message.answer(states_strings[AddressState.choosing_client])
         return
 
-    return
+    if message.text != "Далее":
+        file_id = message.photo[0].file_id
+        await state.update_data(photo_url=file_id)
 
-    # await state.set_state(AddressState.writing_workhours)
-    # await message.answer(states_strings[AddressState.writing_workhours])
+    await state.set_state(AddressState.writing_workhours)
+    await message.answer(states_strings[AddressState.writing_workhours])
 
 
 @router.message(StateFilter(AddressState.writing_workhours), F.text)
 async def writing_workhours(message: Message, state: FSMContext):
-    if message.text == "Далее":
-        await state.set_state(AddressState.writing_notes)
-        await message.answer(states_strings[AddressState.writing_notes])
-        return
-
     if message.text == "Назад":
         await state.set_state(AddressState.choosing_photo)
         await message.answer(states_strings[AddressState.choosing_photo])
         return
 
-    if not re.match(r"([01][0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]", message.text):
-        await message.answer(
-            f"Неверный формат\n"
-            f"{states_strings[AddressState.writing_workhours]}"
-        )
-        return
+    if message.text != "Далее":
+        if not re.match(r"([01][0-9]|2[0-3]):[0-5][0-9]-([01]?[0-9]|2[0-3]):[0-5][0-9]", message.text):
+            await message.answer(
+                f"Неверный формат\n"
+                f"{states_strings[AddressState.writing_workhours]}"
+            )
+            return
 
-    await state.update_data(workhours=message.text)
+        await state.update_data(workhours=message.text)
 
     await state.set_state(AddressState.writing_notes)
     await message.answer(states_strings[AddressState.writing_notes])

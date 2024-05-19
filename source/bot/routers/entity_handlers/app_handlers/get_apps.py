@@ -42,6 +42,7 @@ def apps_to_str(apps: list[ApplicationWithReasons]) -> str:
 
     for app in apps:
         result += app_to_str(app)
+        result += "\n\n"
 
     return result
 

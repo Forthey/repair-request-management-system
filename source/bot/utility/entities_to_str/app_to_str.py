@@ -51,9 +51,9 @@ def full_app_to_str(app: ApplicationFull):
             f"Причина закрытия: {app.close_reason}\n"
         )
     elif app.repairer_id is not None:
-        result += "Статус: в работе"
+        result += "Статус: Взята\n"
     else:
-        result += "Статус: не взята в работу"
+        result += "Статус: Свободна\n"
 
     return result
 
@@ -71,5 +71,5 @@ def app_to_str(app: ApplicationFull | ApplicationWithReasons):
             app.est_repair_date.date() if app.est_repair_date is not None else "None"
         }\n"
         f"Примерное время ремонта: {app.est_repair_duration_hours if app.est_repair_duration_hours is not None else "0"}ч.\n"
-        f"Взято в работу: {"Да" if app.repairer_id is not None else "Нет"}"
+        f"Статус: {"Закрыта" if app.closed_at is not None else "Свободна" if app.repairer_id is None else "Взята"}\n"
     )

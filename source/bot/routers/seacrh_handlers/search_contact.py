@@ -15,16 +15,11 @@ router.inline_query.filter(
 
 @router.inline_query()
 async def search_clients_handler(inline_query: InlineQuery):
-    args = " ".join(inline_query.query.split(" ")[1:]).split(".")
-    argc_len = len(args)
+    contact_args = inline_query.query.split(" ")[1:]
 
-    client = args[0] if argc_len > 0 else ""
-    surname = args[1] if argc_len > 1 else None
-    company_position = args[2] if argc_len > 2 else None
+    contacts: list[Contact] = await con.search_contacts(contact_args)
 
     results: list[InlineQueryResultArticle] = []
-    contacts: list[Contact] = await con.search_contacts(client, surname, company_position)
-
     for contact in contacts:
         results.append(InlineQueryResultArticle(
             id=str(contact.id),
