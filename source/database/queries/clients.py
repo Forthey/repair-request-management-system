@@ -4,7 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.functions import count
 
 from database.engine import async_session_factory
+
 from database.models.client_orm import ClientORM
+
 from schemas.clients import ClientAdd, Client
 
 

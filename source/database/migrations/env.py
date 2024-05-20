@@ -18,7 +18,7 @@ from database.models.client_orm import ClientORM
 from database.models.contact_orm import ContactORM
 from database.models.machine_orm import MachineORM
 from database.models.worker_orm import WorkerORM
-from database.models.other_orms import CompanyActivityORM, CloseReasonORM, RelReasonApplicationORM, CompanyPositionORM
+from database.models.other_orms import CompanyActivityORM, CloseReasonORM, ApplicationReasonORM, CompanyPositionORM
 
 
 config = context.config

@@ -17,9 +17,9 @@ class ContactORM(Base):
     id: Mapped[IntPrimKey]
 
     name: Mapped[str | None]
-    surname: Mapped[str]
+    surname: Mapped[str | None]
     patronymic: Mapped[str | None]
-    client_name: Mapped[str] = mapped_column(ForeignKey("clients.name"))
+    client_name: Mapped[str | None] = mapped_column(ForeignKey("clients.name"))
     company_position: Mapped[str | None] = mapped_column(ForeignKey("company_positions.name", ondelete="SET NULL"))
 
     email: Mapped[str | None]

@@ -6,6 +6,10 @@ from typing import Annotated, Optional
 
 from database.database import Base
 
+from database.models.address_orm import AddressORM
+from database.models.contact_orm import ContactORM
+
+
 IntPrimKey = Annotated[int, mapped_column(primary_key=True)]
 CreateDate = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
 StrPrimKey = Annotated[str, mapped_column(primary_key=True)]
@@ -21,11 +25,11 @@ class ClientORM(Base):
     notes: Mapped[str | None]
 
     # Relationships
-    addresses: Mapped[list["AddressORM"]] = relationship(
+    addresses: Mapped[list[AddressORM]] = relationship(
         back_populates="client"
     )
 
-    contacts: Mapped[list["ContactORM"]] = relationship(
+    contacts: Mapped[list[ContactORM]] = relationship(
         back_populates="client"
     )
 

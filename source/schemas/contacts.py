@@ -3,10 +3,10 @@ from pydantic import BaseModel
 
 class ContactAdd(BaseModel):
     name: str | None = None
-    surname: str
+    surname: str | None = None
     patronymic: str | None = None
     company_position: str | None = None
-    client_name: str
+    client_name: str | None = None
 
     email: str | None = None
     phone1: str | None = None

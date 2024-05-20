@@ -6,6 +6,7 @@ from datetime import datetime
 
 from schemas.machines import Machine
 from schemas.addresses import Address
+from schemas.contacts import Contact
 from schemas.other import ApplicationReason
 
 
@@ -16,11 +17,11 @@ class ApplicationAdd(BaseModel):
     editor_id: int
     repairer_id: int | None = None
 
-    client_name: str
-    contact_id: int | None = None
+    client_name: str | None = None
+    contact_id: int
 
-    address_name: str
-    machine_name: str
+    address_name: str | None = None
+    machine_name: str | None = None
 
     notes: str | None = None
 
@@ -39,9 +40,9 @@ class ApplicationWithReasons(Application):
 
 
 class ApplicationFull(ApplicationWithReasons):
-    machine: Optional["Machine"]
-    address: Optional["Address"]
-    contact: Optional["Contact"]
+    machine: Optional[Machine]
+    address: Optional[Address]
+    contact: Optional[Contact]
 
 
 class ApplicationChangeLogAdd(BaseModel):

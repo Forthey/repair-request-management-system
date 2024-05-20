@@ -24,7 +24,7 @@ commands = [
 
 
 states_strings: dict[str, str] = {
-    ContactState.writing_contact_fio: "Введите ФИО в формате: Фамилия Имя Отчество. Необходимо указать хотя бы фамилию",
+    ContactState.writing_contact_fio: "Введите ФИО в формате: Имя Фамилия Отчество. Необходимо указать хотя бы имя",
     ContactState.writing_contact_client_name: "Выберите компанию, к которой будет привязан этот контакт",
     ContactState.choosing_contact_company_position: "Введите должность (или создайте с помощью new 'должность')",
     ContactState.writing_contact_email: "Введите email",
@@ -69,8 +69,8 @@ async def add_contact_fio(message: Message, state: FSMContext):
                 )
                 return
             await state.update_data(patronymic=args[2])
-        await state.update_data(name=args[1])
-    await state.update_data(surname=args[0])
+        await state.update_data(surname=args[1])
+    await state.update_data(name=args[0])
 
     await message.answer(states_strings[ContactState.writing_contact_client_name])
     await state.set_state(ContactState.writing_contact_client_name)

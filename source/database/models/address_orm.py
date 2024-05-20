@@ -15,10 +15,10 @@ class AddressORM(Base):
     __tablename__ = 'addresses'
 
     name: Mapped[StrPrimKey]
+    client_name: Mapped[StrPrimKey] = mapped_column(ForeignKey("clients.name"))
+
     photo_url: Mapped[str | None]
     workhours: Mapped[str | None]
-
-    client_name: Mapped[str] = mapped_column(ForeignKey("clients.name"))
 
     notes: Mapped[str | None]
 

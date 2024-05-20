@@ -17,7 +17,7 @@ import database.queries.contacts as db_contacts
 import database.queries.machines as db_machines
 import database.queries.addresses as db_addresses
 import database.queries.other as db_other
-from schemas.addresses import AddressAdd
+from schemas.addresses import AddressAdd, Address
 from schemas.applications import ApplicationAdd
 from schemas.contacts import ContactAdd
 
@@ -37,8 +37,8 @@ states_strings: dict[str, str] = {
     AddApplicationState.choosing_app_contact:
         "Введите id контакта, привязанного к клиенту "
         "(или привяжите новый контакт к клиенту, используя команду /add:\n"
-        "/add ПримерФамилии +790012088\n"
-        "/add ПримерФамилии example@gmail.com)\n",
+        "/add Имя +790012088\n"
+        "/add Имя example@gmail.com)\n",
     AddApplicationState.choosing_app_reasons:
         "Введите причины подачи заявки (когда закончите - нажмите 'Далее')",
     AddApplicationState.choosing_app_machine:
@@ -81,6 +81,18 @@ async def choosing_app_client(message: Message, state: FSMContext):
             return
 
         await state.update_data(client_name=client_name)
+        contact_id = (await state.get_data()).get("contact_id")
+
+        if contact_id is not None:
+            if not await db_contacts.contact_belongs_to_client(client_name, contact_id):
+                await message.answer("Контакт не относится к клиенту")
+                return
+            await db_contacts.update_fields(contact_id, client_name=client_name)
+
+        address = (await state.get_data()).get("address_name")
+        if address is not None and not db_addresses.address_belongs_to_client(client_name, address):
+            await message.answer("Адрес не относится к клиенту")
+            return
 
     await state.set_state(AddApplicationState.choosing_app_contact)
     await message.answer(states_strings[AddApplicationState.choosing_app_contact])
@@ -95,23 +107,18 @@ async def choosing_app_contact(message: Message, state: FSMContext):
 
     if message.text != "Далее":
         contact_id = ""
-
+        client_name = (await state.get_data()).get("client_name")
         args = message.text.split(" ")
         if args[0] == "/add":
-            client_name = (await state.get_data()).get("client_name")
-            if client_name is None:
-                await message.answer("Не выбран клиент, невозможно добавить контакт")
-                return
-
             contact: ContactAdd
             if len(args) != 3:
                 await message.answer("Неправильный формат команды /add")
                 return
-            surname = args[1]
+            name = args[1]
             if re.match(r"[^@]+@[^@]+\.[^@]+", args[2]):
-                contact = ContactAdd(surname=surname, email=args[2], client_name=client_name)
+                contact = ContactAdd(name=name, email=args[2], client_name=client_name)
             else:
-                contact = ContactAdd(surname=surname, phone1=args[2], client_name=client_name)
+                contact = ContactAdd(name=name, phone1=args[2], client_name=client_name)
 
             contact_id = await db_contacts.add_contact(contact)
         else:
@@ -123,6 +130,9 @@ async def choosing_app_contact(message: Message, state: FSMContext):
                 return
             if not await db_contacts.contact_exists(int(contact_id)):
                 await message.answer("Контакта с таким id не существует")
+                return
+            if client_name is not None and not await db_contacts.contact_belongs_to_client(client_name, contact_id):
+                await message.answer("Контакт не относится к клиенту")
                 return
 
         await state.update_data(contact_id=contact_id)
@@ -184,11 +194,11 @@ async def choosing_app_address(message: Message, state: FSMContext):
 
     if message.text != "Далее":
         args = message.text.split(" ")
+        client_name = (await state.get_data()).get("client_name")
         address: str
         if args[0] == "/add":
-            client_name = (await state.get_data()).get("client_name")
             if client_name is None:
-                await message.answer("Не выбран клиент, невозможно добавить контакт")
+                await message.answer("Не выбран клиент, невозможно добавить адрес")
                 return
 
             if len(args) == 1:
@@ -201,8 +211,9 @@ async def choosing_app_address(message: Message, state: FSMContext):
                 return
         else:
             address = message.text
-            if not await db_addresses.address_exists(address):
-                await message.answer("Такого адреса не существует")
+            address_full: Address | None = await db_addresses.get_address(client_name, address)
+            if address_full is None:
+                await message.answer("Такого адреса у клиента не существует")
                 return
 
         await state.update_data(address_name=address)

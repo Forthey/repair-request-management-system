@@ -31,7 +31,7 @@ class ApplicationORM(Base):
     repairer_id: Mapped[int | None] = mapped_column(ForeignKey("workers.telegram_id"))
 
     client_name: Mapped[int | None] = mapped_column(ForeignKey("clients.name", ondelete="SET NULL"))
-    contact_id: Mapped[int | None] = mapped_column(ForeignKey("contacts.id", ondelete="SET NULL"))
+    contact_id: Mapped[int] = mapped_column(ForeignKey("contacts.id"))
 
     address_name: Mapped[str | None] = mapped_column(ForeignKey("addresses.name", ondelete="SET NULL"))
     machine_name: Mapped[str | None] = mapped_column(ForeignKey("machines.name", ondelete="SET NULL"))
