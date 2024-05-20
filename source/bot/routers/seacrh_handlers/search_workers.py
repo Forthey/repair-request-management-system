@@ -23,8 +23,9 @@ async def search_workers(inline_query: InlineQuery):
     for worker in workers:
         results.append(InlineQueryResultArticle(
             id=worker.telegram_id.__str__(),
-            title=f"{worker.name} {worker.surname}",
-            description=f"id в Телеграме: {worker.telegram_id}",
+            title=f"{worker.name} {worker.surname} {worker.patronymic if worker.patronymic else ""}",
+            description=f"id в Телеграме: {worker.telegram_id}; \n"
+                        f"{worker.access_right}",
             input_message_content=InputTextMessageContent(
                 message_text=worker.telegram_id.__str__()
             )

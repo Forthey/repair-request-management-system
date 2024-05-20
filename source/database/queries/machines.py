@@ -66,11 +66,14 @@ async def search_machines(args: list[str]) -> list[Machine]:
         machines_orm = (await session.execute(query)).scalars().all()
 
         machines: list[Machine] = []
+        args = args[1:]
         for machine in machines_orm:
+            arg_not_matched = False
             for arg in args:
-                if arg not in machine.name:
+                if arg.lower() not in str(machine.name).lower():
+                    arg_not_matched = True
                     break
+            if not arg_not_matched:
                 machines.append(Machine.model_validate(machine, from_attributes=True))
-                break
 
         return machines

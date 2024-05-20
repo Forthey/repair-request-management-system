@@ -74,16 +74,19 @@ async def search_contacts(args: list[str]) -> list[Contact]:
         print(contacts_orm)
 
         contacts: list[Contact] = []
+        args = args[1:]
         for contact in contacts_orm:
+            arg_not_matched = False
             for arg in args:
-                if arg not in contact.client_name and \
-                        arg not in str(contact.name) and \
-                        arg not in str(contact.surname) and \
-                        arg not in str(contact.patronymic) and \
-                        arg not in str(contact.company_position):
+                if arg.lower() not in str(contact.client_name).lower() and \
+                        arg.lower() not in str(contact.name).lower() and \
+                        arg.lower() not in str(contact.surname).lower() and \
+                        arg.lower() not in str(contact.patronymic).lower() and \
+                        arg.lower() not in str(contact.company_position).lower():
+                    arg_not_matched = True
                     break
+            if not arg_not_matched:
                 contacts.append(Contact.model_validate(contact, from_attributes=True))
-                break
 
         return contacts
 

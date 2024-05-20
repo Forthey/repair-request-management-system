@@ -59,11 +59,14 @@ async def search_addresses(args: list[str]) -> list[Address]:
         addresses_orm = (await session.execute(query)).scalars().all()
 
         addresses: list[Address] = []
+        args = args[1:]
         for address in addresses_orm:
+            arg_not_matched = False
             for arg in args:
-                if arg not in address.name:
-                    continue
+                if arg.lower() not in str(address.name).lower():
+                    arg_not_matched = True
+                    break
+            if not arg_not_matched:
                 addresses.append(Address.model_validate(address, from_attributes=True))
-                break
 
         return addresses

@@ -23,10 +23,11 @@ async def search_clients_handler(inline_query: InlineQuery):
     for contact in contacts:
         results.append(InlineQueryResultArticle(
             id=str(contact.id),
-            title=f"{contact.surname} "
-                  f"{contact.name if contact.name else ""} "
+            title=f"{contact.name + " " if contact.name else ""}"
+                  f"{contact.surname + " " if contact.surname else ""} "
                   f"{contact.patronymic if contact.patronymic else ""}",
-            description=f"{contact.client_name} - {contact.company_position}",
+            description=f"Компания: {contact.client_name if contact.client_name else "Не указана"}; \n"
+                        f"Должность: {contact.company_position if contact.company_position else "Не указана"};",
             input_message_content=InputTextMessageContent(
                 message_text=str(contact.id)
             )

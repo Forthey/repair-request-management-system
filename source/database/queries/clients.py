@@ -59,11 +59,14 @@ async def search_clients(args: list[str]) -> list[Client]:
         clients_orm = (await session.execute(query)).scalars().all()
 
         clients: list[Client] = []
+        args = args[1:]
         for client in clients_orm:
+            arg_not_matched = False
             for arg in args:
-                if arg not in client.name:
-                    continue
+                if arg.lower() not in str(client.name).lower():
+                    arg_not_matched = True
+                    break
+            if not arg_not_matched:
                 clients.append(Client.model_validate(client, from_attributes=True))
-                break
 
         return clients

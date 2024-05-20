@@ -14,14 +14,14 @@ async def search_app_reasons(inline_query: InlineQuery):
     name = " ".join(inline_query.query.split(" ")[1:])
 
     results: list[InlineQueryResultArticle] = []
-    machines: list[ApplicationReason] = await o.search_app_reason(name)
+    app_reasons: list[ApplicationReason] = await o.search_app_reason(name)
 
-    for machine in machines:
+    for reason in app_reasons:
         results.append(InlineQueryResultArticle(
-            id=machine.name,
-            title=f"{machine.name}",
+            id=reason.name,
+            title=f"{reason.name}",
             input_message_content=InputTextMessageContent(
-                message_text=machine.name
+                message_text=reason.name
             )
         ))
 
@@ -30,10 +30,10 @@ async def search_app_reasons(inline_query: InlineQuery):
 
 @router.inline_query(InlineTargetFilter(all_entity_strings["close_reason_strings"]))
 async def search_close_reasons(inline_query: InlineQuery):
-    name = " ".join(inline_query.query.split(" ")[1:])
+    reason_args = inline_query.query.split(" ")[1:]
 
     results: list[InlineQueryResultArticle] = []
-    reasons: list[CloseReason] = await o.search_close_reason(name)
+    reasons: list[CloseReason] = await o.search_close_reason(reason_args)
 
     for reason in reasons:
         results.append(InlineQueryResultArticle(
@@ -49,10 +49,10 @@ async def search_close_reasons(inline_query: InlineQuery):
 
 @router.inline_query(InlineTargetFilter(all_entity_strings["company_activity_strings"]))
 async def search_company_activity(inline_query: InlineQuery):
-    name = " ".join(inline_query.query.split(" ")[1:])
+    activity_args = inline_query.query.split(" ")[1:]
 
     results: list[InlineQueryResultArticle] = []
-    activities: list[CompanyActivity] = await o.search_company_activity(name)
+    activities: list[CompanyActivity] = await o.search_company_activity(activity_args)
 
     for activity in activities:
         results.append(InlineQueryResultArticle(
@@ -68,10 +68,10 @@ async def search_company_activity(inline_query: InlineQuery):
 
 @router.inline_query(InlineTargetFilter(all_entity_strings["company_position_strings"]))
 async def search_company_position(inline_query: InlineQuery):
-    name = " ".join(inline_query.query.split(" ")[1:])
+    position_args = inline_query.query.split(" ")[1:]
 
     results: list[InlineQueryResultArticle] = []
-    positions: list[CompanyPosition] = await o.search_company_position(name)
+    positions: list[CompanyPosition] = await o.search_company_position(position_args)
 
     for position in positions:
         results.append(InlineQueryResultArticle(

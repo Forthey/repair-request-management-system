@@ -68,16 +68,18 @@ async def search_workers(args: list[str]) -> list[Worker]:
         workers_orm = (await session.execute(query)).scalars().all()
 
         workers: list[Worker] = []
+        args = args[1:]
         for worker in workers_orm:
+            arg_not_matched = False
             for arg in args:
-                if arg not in worker.surname and \
-                        arg not in worker.name and \
-                        arg not in str(worker.patronymic) and \
-                        arg not in worker.access_right:
+                if arg.lower() not in str(worker.surname).lower() and \
+                        arg not in str(worker.name).lower() and \
+                        arg not in str(worker.patronymic).lower() and \
+                        arg not in str(worker.access_right).lower():
+                    arg_not_matched = True
                     break
-
+            if not arg_not_matched:
                 workers.append(Worker.model_validate(worker, from_attributes=True))
-                break
 
         return workers
 

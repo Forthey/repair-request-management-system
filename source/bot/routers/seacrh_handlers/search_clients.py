@@ -24,7 +24,8 @@ async def search_clients_handler(inline_query: InlineQuery):
         results.append(InlineQueryResultArticle(
             id=client.name,
             title=f"{client.name}",
-            description=f"{client.activity}",
+            description=f"Сфера: {client.activity if client.activity else "Не указана"}; \n"
+                        f"Род. компания: {client.main_client_name if client.main_client_name else "Не указана"}",
             input_message_content=InputTextMessageContent(
                 message_text=client.name
             )

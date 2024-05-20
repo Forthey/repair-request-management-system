@@ -102,15 +102,17 @@ async def search_applications(args: list[str]) -> list[Application]:
         apps_orm = (await session.execute(query)).scalars().all()
 
         apps: list[Application] = []
-
+        args = args[1:]
         for app in apps_orm:
+            arg_not_matched = False
             for arg in args:
-                if arg not in str(app.client_name) and \
-                        arg not in str(app.machine_name) and \
-                        arg not in str(app.address_name):
-                    continue
+                if arg.lower() not in str(app.client_name).lower() and \
+                        arg.lower() not in str(app.machine_name).lower() and \
+                        arg.lower() not in str(app.address_name).lower():
+                    arg_not_matched = True
+                    break
+            if not arg_not_matched:
                 apps.append(Application.model_validate(app, from_attributes=True))
-                break
 
         return apps
 

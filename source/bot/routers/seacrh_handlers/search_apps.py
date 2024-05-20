@@ -23,7 +23,9 @@ async def search_apps(inline_query: InlineQuery):
         results.append(InlineQueryResultArticle(
             id=application.id.__str__(),
             title=f"'{application.client_name}' ({application.created_at.date()})",
-            description=f"id: {application.id}, станок: {application.machine_name}",
+            description=f"id: {application.id}; \n"
+                        f"Станок: {application.machine_name if application.machine_name else "Не указан"}; \n"
+                        f"Адрес: {application.address_name if application.address_name else "Не указан"}",
             input_message_content=InputTextMessageContent(
                 message_text=application.id.__str__()
             )

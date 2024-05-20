@@ -24,7 +24,8 @@ async def search_adresses_handler(inline_query: InlineQuery):
         results.append(InlineQueryResultArticle(
             id=address.name,
             title=f"{address.name}",
-            description=f"{address.client_name}",
+            description=f"Клиент: {address.client_name if address.client_name else "Не указан"}; \n"
+                        f"Часы работы: {address.workhours if address.workhours else "Не указаны"};",
             input_message_content=InputTextMessageContent(
                 message_text=address.name
             )
