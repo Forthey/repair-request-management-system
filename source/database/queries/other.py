@@ -1,4 +1,4 @@
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, and_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -71,13 +71,16 @@ async def search_company_position(args: list[str]) -> list[CompanyPosition]:
         return positions
 
 
-async def add_app_reason(reason: str) -> str | None:
+async def add_app_reason(app_id: int, reason: str) -> str | None:
     session: AsyncSession
     async with async_session_factory() as session:
         query = (
             insert(ApplicationReasonORM)
-            .values(name=reason)
-            .returning(ApplicationReasonORM.name)
+            .values(
+                application_id=app_id,
+                reason_name=reason
+            )
+            .returning(ApplicationReasonORM.reason_name)
         )
 
         try:
@@ -89,28 +92,20 @@ async def add_app_reason(reason: str) -> str | None:
             return None
 
 
-async def find_app_reason(reason: str) -> bool:
+async def find_app_reason(app_id: int, reason: str) -> bool:
     session: AsyncSession
     async with async_session_factory() as session:
         query = (
             select(ApplicationReasonORM)
-            .where(ApplicationReasonORM.name == reason)
+            .where(
+                and_(
+                    ApplicationReasonORM.application_id == app_id,
+                    ApplicationReasonORM.reason_name == reason
+                )
+            )
         )
 
         return (await session.execute(query)).scalar_one_or_none() is not None
-
-
-async def search_app_reason(mask: str) -> list[ApplicationReason]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            select(ApplicationReasonORM)
-            .where(ApplicationReasonORM.name.icontains(mask))
-        )
-
-        reasons_orm = (await session.execute(query)).scalars().all()
-
-        return [ApplicationReason.model_validate(reason, from_attributes=True) for reason in reasons_orm]
 
 
 async def add_close_reason(reason: str) -> str | None:

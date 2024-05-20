@@ -144,13 +144,14 @@ async def choosing_app_reasons(message: Message, state: FSMContext):
         return
 
     reason = message.text
-    if not await db_other.find_app_reason(reason):
-        await message.answer("Такой причины не существует")
-        return
     reasons = (await state.get_data()).get("app_reasons")
     if reasons is None:
         reasons: list[str] = [reason]
     else:
+        for added_reason in reasons:
+            if added_reason == reason:
+                await message.answer("Такая причина уже была добавлена")
+                return
         reasons.append(reason)
     await state.update_data(app_reasons=reasons)
 

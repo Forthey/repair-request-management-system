@@ -6,6 +6,13 @@ from typing import Annotated, Optional
 
 from database.database import Base
 
+from database.models.client_orm import ClientORM
+from database.models.contact_orm import ContactORM
+from database.models.machine_orm import MachineORM
+from database.models.address_orm import AddressORM
+from database.models.other_orms import ApplicationReasonORM
+
+
 IntPrimKey = Annotated[int, mapped_column(primary_key=True)]
 CreateDate = Annotated[datetime, mapped_column(server_default=text("TIMEZONE('utc', now())"))]
 
@@ -35,30 +42,27 @@ class ApplicationORM(Base):
     notes: Mapped[str | None]
 
     # Relationships
-    reasons: Mapped[list["ApplicationReasonORM"]] = relationship(
-        back_populates="applications",
-        secondary="rel_reasons_applications",
-    )
+    reasons: Mapped[list[ApplicationReasonORM]] = relationship()
 
     editor: Mapped["WorkerORM"] = relationship(
         foreign_keys=[editor_id],
         back_populates="created_applications"
     )
 
-    client: Mapped["ClientORM"] = relationship(
+    client: Mapped[ClientORM] = relationship(
         back_populates="applications"
     )
 
-    address: Mapped[Optional["AddressORM"]] = relationship()
+    address: Mapped[Optional[AddressORM]] = relationship()
 
-    machine: Mapped[Optional["MachineORM"]] = relationship()
+    machine: Mapped[Optional[MachineORM]] = relationship()
 
     repairer: Mapped[Optional["WorkerORM"]] = relationship(
         foreign_keys=[repairer_id],
         back_populates="taken_applications"
     )
 
-    contact: Mapped[Optional["ContactORM"]] = relationship(
+    contact: Mapped[Optional[ContactORM]] = relationship(
         foreign_keys=[contact_id],
         back_populates="applications"
     )

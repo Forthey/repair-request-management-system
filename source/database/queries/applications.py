@@ -6,14 +6,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from database.engine import async_session_factory
+
 from database.models.application_orm import ApplicationORM, ApplicationChangeLogORM
-from database.models.other_orms import RelReasonApplicationORM
-from schemas.contacts import Contact
-from schemas.other import ApplicationReason
+from database.models.other_orms import ApplicationReasonORM
+
 from schemas.applications import ApplicationAdd, Application, ApplicationFull, ApplicationWithReasons, \
     ApplicationChangeLog
-
-ApplicationFull.model_rebuild()
 
 
 changeable_app_field_to_str = {
@@ -130,7 +128,7 @@ async def add_application(application: ApplicationAdd, app_reasons: list[str]) -
             app_id = (await session.execute(query)).scalar_one_or_none()
 
             for reason in app_reasons:
-                session.add(RelReasonApplicationORM(application_id=app_id, reason_name=reason))
+                session.add(ApplicationReasonORM(application_id=app_id, reason_name=reason))
 
             await session.commit()
             return app_id

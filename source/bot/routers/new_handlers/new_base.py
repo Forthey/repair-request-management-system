@@ -8,7 +8,6 @@ from bot.routers.new_handlers import (
     add_client,
     add_machine,
     add_company_position,
-    add_app_reason,
     add_company_activity,
     add_close_reason,
     error
@@ -47,7 +46,6 @@ router.include_routers(
     add_client.router,
     add_machine.router,
     add_company_position.router,
-    add_app_reason.router,
     add_close_reason.router,
     add_company_activity.router,
     error.router

@@ -2,7 +2,10 @@ from sqlalchemy import select, update, delete, insert, or_, and_
 from sqlalchemy.exc import IntegrityError
 
 from database.engine import async_session_factory, AsyncSession
-from database.models.all import WorkerORM
+
+from database.models.application_orm import ApplicationORM
+from database.models.worker_orm import WorkerORM
+
 from schemas.workers import WorkerAdd, Worker
 
 

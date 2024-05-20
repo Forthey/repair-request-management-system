@@ -20,23 +20,9 @@ class CompanyPositionORM(Base):
 
 
 class ApplicationReasonORM(Base):
-    __tablename__ = "applications_reasons"
-
-    name: Mapped[StrPrimKey]
-
-    # Relationships
-
-    applications: Mapped[list["ApplicationORM"]] = relationship(
-        back_populates="reasons",
-        secondary="rel_reasons_applications"
-    )
-
-
-class RelReasonApplicationORM(Base):
-    __tablename__ = "rel_reasons_applications"
+    __tablename__ = "application_reasons"
 
     reason_name: Mapped[str] = mapped_column(
-        ForeignKey("applications_reasons.name", ondelete="cascade"),
         primary_key=True
     )
     application_id: Mapped[int] = mapped_column(

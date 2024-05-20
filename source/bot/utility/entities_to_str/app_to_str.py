@@ -63,7 +63,7 @@ def app_to_str(app: ApplicationFull | ApplicationWithReasons):
         f"id = {app.id}\n"
         f"Заявка создана: {app.created_at.date()}\n"
         f"id Клиента: {app.client_name}\n"
-        f"Причины заявки: {"; ".join(map(lambda reason: reason.name, app.reasons))}\n"
+        f"Причины заявки: {"; ".join(map(lambda reason: reason.reason_name, app.reasons))}\n"
         f"id Контакта: {app.contact_id}\n"
         f"Станок: {app.machine_name}\n"
         f"Адрес: {app.address_name}\n"

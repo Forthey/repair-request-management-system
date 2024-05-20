@@ -12,7 +12,8 @@ class CompanyPosition(BaseModel):
 
 
 class ApplicationReason(BaseModel):
-    name: str
+    application_id: int
+    reason_name: str
 
 
 class CloseReason(BaseModel):
