@@ -21,10 +21,10 @@ async def load_workers():
 async def check_common_access(telegram_id: int) -> bool:
     redis_client: Redis
     async with Redis(connection_pool=pool) as redis_client:
-        return (await redis_client.get(f"user:{telegram_id}")) is not None
+        return await redis_client.exists(f"user:{telegram_id}")
 
 
 async def check_admin_rights(telegram_id: int) -> bool:
     redis_client: Redis
     async with Redis(connection_pool=pool) as redis_client:
-        return (await redis_client.get(f"user:{telegram_id}")) == "admin"
+        return (await redis_client.get(f"user:{telegram_id}")).decode("utf-8") == "Админ"

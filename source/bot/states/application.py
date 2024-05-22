@@ -20,6 +20,9 @@ class ChooseOneApplicationState(StatesGroup):
     chosen_app_confirmation = State()
     writing_app_close_reason = State()
 
+    choosing_repairer_id = State()
+    app_transfer_confirmation = State()
+
 
 class EditApplicationState(StatesGroup):
     choosing_app_id = State()

@@ -178,6 +178,9 @@ async def take_application(app_id: int, repairer_id: int) -> bool:
 
         app_id = (await session.execute(query)).scalar_one_or_none()
 
+        if app_id is None:
+            return False
+
         log_query = (
             insert(ApplicationChangeLogORM)
             .values(
@@ -187,10 +190,11 @@ async def take_application(app_id: int, repairer_id: int) -> bool:
                 new_value=repairer_id
             )
         )
+
         await session.execute(log_query)
 
         await session.commit()
-        return app_id is not None
+        return True
 
 
 async def close_application(app_id: int, reason: str) -> bool:

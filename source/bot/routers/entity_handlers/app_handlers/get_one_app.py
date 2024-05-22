@@ -7,12 +7,16 @@ from aiogram.utils.media_group import MediaGroupBuilder
 from bot.commands import base_commands
 from bot.utility.entities_to_str.app_to_str import full_app_to_str
 from bot.utility.entities_to_str.logs_to_str import logs_to_str
+from bot.utility.entities_to_str.worker_to_str import worker_to_str
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 from bot.states.application import ChooseOneApplicationState
 
 from database.queries.applications import get_application, take_application, close_application, get_application_logs
 from database.queries.other import find_close_reason
+from database.queries.workers import get_worker
 from schemas.applications import ApplicationFull
+
+from redis_db.workers import check_admin_rights
 
 router = Router()
 
@@ -48,6 +52,9 @@ async def choosing_app_id(message: Message, state: FSMContext):
             buttons["confirm_take_app"] = "Взять"
         buttons["confirm_edit_app"] = "Изменить"
         buttons["confirm_close_app"] = "Закрыть"
+
+    if await check_admin_rights(message.from_user.id):
+        buttons["confirm_transfer_app"] = "Назначить рабочего"
 
     await message.answer(
         full_app_to_str(app),
@@ -128,3 +135,61 @@ async def show_app_logs(query: CallbackQuery, state: FSMContext):
     logs = await get_application_logs(app_id)
 
     await query.message.answer(logs_to_str(logs))
+
+
+@router.callback_query(StateFilter(ChooseOneApplicationState.chosen_app_confirmation), F.data == "confirm_transfer_app")
+async def confirm_transfer_app(query: CallbackQuery, state: FSMContext):
+    await query.message.answer("Введите id работника")
+
+    await state.set_state(ChooseOneApplicationState.choosing_repairer_id)
+
+
+@router.message(StateFilter(ChooseOneApplicationState.choosing_repairer_id), F.text)
+async def transfer_app_to_repairer(message: Message, state: FSMContext):
+    repairer_id = message.text
+    try:
+        repairer_id = int(repairer_id)
+    except ValueError:
+        await message.answer("Указан не id")
+        return
+
+    worker = await get_worker(repairer_id)
+    if worker is None:
+        await message.answer(f"Работника с id {repairer_id} не существует")
+        return
+
+    await state.update_data(repairer_id=repairer_id)
+    await state.set_state(ChooseOneApplicationState.app_transfer_confirmation)
+    await message.answer(
+        "Заявка будет взята работником:\n"
+        f"{worker_to_str(worker)}",
+        reply_markup=render_inline_buttons({
+            "do_confirm_app_transfer": "Подтвердить",
+            "decline_app_transfer": "Выбрать другого"
+        }, 1)
+    )
+
+
+@router.callback_query(StateFilter(ChooseOneApplicationState.app_transfer_confirmation), F.data == "decline_app_transfer")
+async def decline_app_transfer(query: CallbackQuery, state: FSMContext):
+    await query.answer("Отменено")
+    await query.message.answer("Введите id работника")
+    await state.set_state(ChooseOneApplicationState.choosing_repairer_id)
+
+
+@router.callback_query(StateFilter(ChooseOneApplicationState.app_transfer_confirmation), F.data == "do_confirm_app_transfer")
+async def do_confirm_app_transfer(query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    app_id = data.get("app_id")
+    repairer_id = data.get("repairer_id")
+
+    if repairer_id is None or app_id is None or not await take_application(app_id, repairer_id) :
+        await query.answer("Что-то пошло не так...")
+        return
+
+    await query.answer("Заявка успешно передана")
+    await state.clear()
+    await query.message.answer(
+        "Выберите действие",
+        reply_markup=render_keyboard_buttons(base_commands, 2)
+    )
