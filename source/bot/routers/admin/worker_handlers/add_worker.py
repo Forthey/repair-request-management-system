@@ -9,7 +9,7 @@ from bot.states.worker import WorkerState
 from bot.utility.get_id_by_username import get_user_id
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 from bot.commands import base_commands
-from redis_db.workers import load_workers
+from redis_db.workers import reload_worker
 
 from schemas.workers import WorkerAdd
 from database.queries import workers as w
@@ -157,7 +157,8 @@ async def confirm_worker(callback: CallbackQuery, state: FSMContext):
     await callback.answer(
         text=f"Работник добавлен"
     )
-    await load_workers()
+
+    await reload_worker(worker.telegram_id)
 
     await callback.message.answer(
         text="Выберите действие",

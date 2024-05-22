@@ -2,7 +2,7 @@ from redis.asyncio import Redis
 
 from redis_db.base import pool
 
-from database.queries.workers import get_workers
+from database.queries.workers import get_workers, get_worker
 from schemas.workers import Worker
 
 
@@ -16,6 +16,17 @@ async def load_workers():
             await pipe.set(f"user:{worker.telegram_id}", worker.access_right)
 
         await pipe.execute()
+
+
+async def reload_worker(telegram_id: int):
+    redis: Redis
+    async with Redis(connection_pool=pool) as redis:
+        worker: Worker = await get_worker(telegram_id)
+
+        # TODO is hired?
+        if worker is None:
+            await redis.delete(f"user:{telegram_id}")
+        await redis.set(f"user:{telegram_id}", worker.access_right)
 
 
 async def check_common_access(telegram_id: int) -> bool:
