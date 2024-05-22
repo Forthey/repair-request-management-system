@@ -15,6 +15,13 @@ class Settings(BaseSettings):
     DB_POSTGRES_NAME: str
     DB_POSTGRES_PASSWORD: str
 
+    REDIS_HOST: str
+    REDIS_PORT: int
+
+    POSTGRES_VERSION: str
+    REDIS_VERSION: str
+
+
     @property
     def get_token(self):
         return self.TOKEN

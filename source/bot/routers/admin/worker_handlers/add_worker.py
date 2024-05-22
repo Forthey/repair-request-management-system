@@ -9,11 +9,13 @@ from bot.states.worker import WorkerState
 from bot.utility.get_id_by_username import get_user_id
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 from bot.commands import base_commands
+from redis_db.workers import load_workers
 
 from schemas.workers import WorkerAdd
 from database.queries import workers as w
 
-from bot.cache_data import tmp_access_rights, fetch_workers
+from bot.target_names import access_rights
+
 
 router = Router()
 
@@ -113,12 +115,12 @@ async def add_name(message: Message, state: FSMContext):
     await message.answer(
         text=f"Выберите _права_ _доступа_ для работника",
         parse_mode=ParseMode.MARKDOWN_V2,
-        reply_markup=render_inline_buttons(tmp_access_rights, 2)
+        reply_markup=render_inline_buttons(access_rights, 2)
     )
     await state.set_state(WorkerState.choosing_worker_access_rights)
 
 
-@router.callback_query(StateFilter(WorkerState.choosing_worker_access_rights), F.data.in_(tmp_access_rights))
+@router.callback_query(StateFilter(WorkerState.choosing_worker_access_rights), F.data.in_(access_rights))
 async def add_access_rights(callback: CallbackQuery, state: FSMContext):
     access_right = callback.data
 
@@ -152,11 +154,10 @@ async def confirm_worker(callback: CallbackQuery, state: FSMContext):
         await state.set_state(WorkerState.choosing_worker_access_rights)
         return
 
-    await fetch_workers()
-
     await callback.answer(
         text=f"Работник добавлен"
     )
+    await load_workers()
 
     await callback.message.answer(
         text="Выберите действие",
@@ -171,5 +172,5 @@ async def access_rights_chosen_incorrectly(message: Message, state: FSMContext):
     await message.answer(
         text=f"Пожалуйста, выберите права доступа",
         parse_mode=ParseMode.MARKDOWN_V2,
-        reply_markup=render_inline_buttons(tmp_access_rights, 2)
+        reply_markup=render_inline_buttons(access_rights, 2)
     )

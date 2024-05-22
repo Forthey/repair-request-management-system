@@ -7,12 +7,15 @@ from aiogram.types import BotCommand
 
 from bot.routers import base
 from config import settings
+from redis_db.workers import load_workers
 
 # Enable logging
 logging.basicConfig(level=logging.INFO)
 
 
 async def main():
+    await load_workers()
+
     bot = Bot(token=settings.TOKEN)
     dp = Dispatcher()
 

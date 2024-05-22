@@ -9,3 +9,8 @@ all_entity_strings: dict[str, list[str]] = {
     "contact_strings": ["контакт", "кон"],
     "address_strings": ["адрес", "а"]
 }
+
+access_rights = {
+    "Админ": "Админ",
+    "Работник": "Работник"
+}

@@ -3,7 +3,7 @@ from functools import wraps
 from aiogram.filters import BaseFilter
 from aiogram.types import Message
 
-from bot.cache_data import workers_id, fetch_workers
+from redis_db.workers import check_common_access
 
 
 class AuthFilter(BaseFilter):  # [1]
@@ -11,7 +11,7 @@ class AuthFilter(BaseFilter):  # [1]
         pass
 
     async def __call__(self, message: Message) -> bool:
-        if message.from_user.id not in workers_id:
+        if not await check_common_access(message.from_user.id):
             await message.answer(
                 text=f"У вас нет доступа для использования этого бота\n"
                      f"Если вы считаете, что это ошибка - обратитесь к администратору"
