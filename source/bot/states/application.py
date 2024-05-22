@@ -35,3 +35,7 @@ class EditApplicationState(StatesGroup):
     editing_app_est_repair_date_and_duration = State()
     editing_app_notes = State()
     edit_app_confirmation = State()
+
+
+class ApplicationListsState(StatesGroup):
+    list_by_worker = State()

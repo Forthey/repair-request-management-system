@@ -4,6 +4,7 @@ from sqlalchemy import insert, select, or_, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from sqlalchemy.sql.functions import count
 
 from database.engine import async_session_factory
 
@@ -23,6 +24,17 @@ changeable_app_field_to_str = {
     "machine_name": "Станок",
     "notes": "Заметки"
 }
+
+
+async def count_applications() -> int:
+    session: AsyncSession
+    async with async_session_factory() as session:
+        query = (
+            select(count())
+            .select_from(ApplicationORM)
+        )
+
+        return (await session.execute(query)).scalar_one()
 
 
 async def get_applications(offset: int = 0, limit: int = 3, **params) -> list[ApplicationWithReasons]:
