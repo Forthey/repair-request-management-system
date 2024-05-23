@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from asyncio import WindowsSelectorEventLoopPolicy
+# from asyncio import WindowsSelectorEventLoopPolicy
 
 from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand
@@ -32,7 +32,7 @@ async def main():
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
-asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
+# asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
 if __name__ == "__main__":
     asyncio.run(main())

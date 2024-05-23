@@ -1,0 +1,48 @@
+version: "3.3"
+
+services:
+  redis:
+    container_name: redis
+    image: redis:${REDIS_VERSION}
+    restart: always
+    healthcheck:
+      test: "CMD redis-cli --raw incr ping"
+      interval: 1s
+      timeout: 5s
+      retries: 10
+#    ports:
+#      - ${REDIS_PORT}:${REDIS_PORT}
+
+  postgres:
+    container_name: postgres
+    image: postgres:${POSTGRES_VERSION}
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${DB_POSTGRES_NAME}
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER}'"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+
+  tgbot:
+    container_name: tgbot
+    restart: always
+    build: .
+    depends_on:
+      postgres:
+        condition: service_started
+      redis:
+        condition: service_started
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./logs:/server/logs
+
+
+volumes:
+  pg_data:

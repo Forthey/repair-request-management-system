@@ -24,7 +24,7 @@ from database.models.other_orms import CompanyActivityORM, CloseReasonORM, Appli
 config = context.config
 
 # TODO: change to Ubuntu later
-asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+# asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
@@ -35,7 +35,7 @@ config.set_main_option('sqlalchemy.url', settings.get_psycopg_URL)
 target_metadata = Base.metadata
 
 
-def  run_migrations_offline() -> None:
+def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
 
     This configures the context with just a URL
