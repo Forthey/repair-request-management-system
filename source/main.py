@@ -40,6 +40,7 @@ async def main():
         await dp.start_polling(bot)
     except Exception as e:
         logging.error(e)
+        print(e)
         return
 
 # asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
