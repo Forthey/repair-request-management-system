@@ -6,10 +6,10 @@ services:
     image: redis:${REDIS_VERSION}
     restart: always
     healthcheck:
-      test: "CMD redis-cli --raw incr ping"
-      interval: 1s
+      test: ["CMD", "redis-cli",  "ping"]
+      interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 3
 #    ports:
 #      - ${REDIS_PORT}:${REDIS_PORT}
 
@@ -24,7 +24,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${POSTGRES_USER}'"]
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U ${DB_POSTGRES_USER}'"]
       interval: 1s
       timeout: 5s
       retries: 10
@@ -35,9 +35,9 @@ services:
     build: .
     depends_on:
       postgres:
-        condition: service_started
+        condition: service_healthy
       redis:
-        condition: service_started
+        condition: service_healthy
     volumes:
       - ./logs:/server/logs
 
