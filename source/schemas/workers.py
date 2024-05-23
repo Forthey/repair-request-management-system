@@ -12,4 +12,4 @@ class WorkerAdd(BaseModel):
 
 
 class Worker(WorkerAdd):
-    pass
+    active: bool

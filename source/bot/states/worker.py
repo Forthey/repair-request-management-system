@@ -1,7 +1,7 @@
 from aiogram.fsm.state import StatesGroup, State
 
 
-class WorkerState(StatesGroup):
+class AddWorkerState(StatesGroup):
     # Add worker
     writing_worker_username = State()
     writing_worker_fio = State()
@@ -12,7 +12,8 @@ class WorkerState(StatesGroup):
     choosing_worker_to_delete = State()
     delete_worker_confirmation = State()
 
-    # Update worker
-    choosing_worker_to_update = State()
-    choosing_worker_field = State()
-    update_worker_confirmation = State()
+
+class OneWorkerState(StatesGroup):
+    choosing_worker_id = State()
+    choosing_worker_confirmation = State()
+    listing_worker_apps = State()

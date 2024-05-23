@@ -57,7 +57,7 @@ def app_to_str(app: ApplicationFull | ApplicationWithReasons):
         f"Заявка создана: {app.created_at.date()}\n"
         f"Клиент: {app.client_name if app.client_name else "Не указан"}\n"
         f"Причины заявки: {"; ".join(map(lambda reason: reason.reason_name, app.reasons))}\n"
-        f"Контакт:\n {app.contact_id if app.contact_id is not None else "Не указан"}"
+        f"Контакт: {app.contact_id if app.contact_id is not None else "Не указан"}\n"
         f"Станок: {app.machine_name}\n"
         f"Адрес: {app.address_name}\n"
         f"Примерная дата ремонта: {

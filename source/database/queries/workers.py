@@ -29,7 +29,10 @@ async def add_worker(worker: WorkerAdd) -> int | None:
 async def get_workers() -> list[Worker]:
     session: AsyncSession
     async with async_session_factory() as session:
-        query = select(WorkerORM)
+        query = (
+            select(WorkerORM)
+            .where(WorkerORM.active == True)
+        )
 
         workers_orm = (await session.execute(query)).scalars().all()
 
@@ -42,6 +45,7 @@ async def search_workers(args: list[str]) -> list[Worker]:
         if len(args) == 0:
             query = (
                 select(WorkerORM)
+                .where(WorkerORM.active == True)
                 .order_by(WorkerORM.surname)
                 .order_by(WorkerORM.name)
                 .order_by(WorkerORM.patronymic)
@@ -54,6 +58,7 @@ async def search_workers(args: list[str]) -> list[Worker]:
 
         query = (
             select(WorkerORM)
+            .where(WorkerORM.active == True)
             .where(
                 or_(
                     WorkerORM.surname.icontains(args[0]),
@@ -87,13 +92,16 @@ async def search_workers(args: list[str]) -> list[Worker]:
         return workers
 
 
-async def get_worker(telegram_id: int) -> Worker | None:
+async def get_worker(telegram_id: int, force: bool = False) -> Worker | None:
     session: AsyncSession
     async with async_session_factory() as session:
         query = (
             select(WorkerORM)
             .where(WorkerORM.telegram_id == telegram_id)
         )
+        if not force:
+            query = query.where(WorkerORM.active == False)
+
         worker_orm = (await session.execute(query)).scalars().one_or_none()
         result = Worker.model_validate(worker_orm, from_attributes=True) if worker_orm else None
 
@@ -101,29 +109,18 @@ async def get_worker(telegram_id: int) -> Worker | None:
         return result
 
 
-async def update_worker(telegram_id, **worker_fields):
+async def update_worker(telegram_id, **worker_fields) -> Worker | None:
     session: AsyncSession
     async with async_session_factory() as session:
         query = (
             update(WorkerORM)
             .where(WorkerORM.telegram_id == telegram_id)
             .values(**worker_fields)
+            .returning(WorkerORM)
         )
 
-        await session.execute(query)
+        worker_orm = (await session.execute(query)).scalar_one_or_none()
+        worker = Worker.model_validate(worker_orm, from_attributes=True) if worker_orm else None
+
         await session.commit()
-
-
-async def delete_worker(telegram_id: int) -> int | None:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            delete(WorkerORM)
-            .where(WorkerORM.telegram_id == telegram_id)
-            .returning(WorkerORM.telegram_id)
-        )
-
-        telegram_id: int | None = (await session.execute(query)).one_or_none()
-        await session.commit()
-
-        return telegram_id
+        return worker

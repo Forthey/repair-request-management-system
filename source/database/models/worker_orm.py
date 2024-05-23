@@ -19,6 +19,8 @@ class WorkerORM(Base):
     patronymic: Mapped[str | None]
 
     access_right: Mapped[str]
+
+    active: Mapped[bool]
     # active: Mapped[bool] = mapped_column(default=True)
 
     # Relationships

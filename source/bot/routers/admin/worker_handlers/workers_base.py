@@ -4,7 +4,7 @@ from aiogram.types import Message
 
 
 # Nester routers
-from bot.routers.admin.worker_handlers import add_worker
+from bot.routers.admin.worker_handlers import add_worker, get_one_worker
 # Button from list renderer
 from bot.utility.render_buttons import render_keyboard_buttons
 from bot.commands import worker_commands
@@ -22,4 +22,5 @@ async def print_help(message: Message):
 
 router.include_routers(
     add_worker.router,
+    get_one_worker.router
 )

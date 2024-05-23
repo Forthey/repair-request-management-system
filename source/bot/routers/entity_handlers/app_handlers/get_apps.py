@@ -7,7 +7,7 @@ from bot.states.application import ApplicationListsState
 from bot.utility.entities_to_str.app_to_str import app_to_str
 from bot.utility.render_buttons import render_inline_buttons, render_keyboard_buttons
 
-from database.queries.applications import get_applications, count_applications
+from database.queries.applications import get_applications, count_worker_applications
 from schemas.applications import ApplicationWithReasons
 
 router = Router()
@@ -31,7 +31,7 @@ commands = [
 @router.message(StateFilter(None), F.text.lower() == "просмотреть заявки")
 @router.message(StateFilter(None), Command("get_apps"))
 async def get_apps(message: Message, state: FSMContext):
-    apps_number = await count_applications()
+    apps_number = await count_worker_applications(message.from_user.id)
 
     chunk_size = 3
     await state.update_data(max_offset=apps_number)
@@ -72,9 +72,6 @@ async def get_all_apps_from_worker(message: Message, state: FSMContext):
 
     apps: list[ApplicationWithReasons] = await get_applications(offset, chunk_size, worker_id=worker_id)
 
-    if len(apps) == 0:
-        return False
-
     await message.edit_text(
         apps_to_str(apps),
         reply_markup=render_inline_buttons(app_list_commands, 3)
@@ -90,7 +87,7 @@ async def get_worker_apps_offset_next(query: CallbackQuery, state: FSMContext):
     offset = data.get("offset", 0)
     chunk_size = data.get("chunk_size", 3)
 
-    if offset >= max_offset:
+    if offset > max_offset - chunk_size:
         await query.answer("Это последняя страница")
         return
 
@@ -106,5 +103,6 @@ async def get_worker_apps_offset_prev(query: CallbackQuery, state: FSMContext):
 
     if offset <= 0:
         await query.answer("Это первая страница")
+        return 
     await state.update_data(offset=max(0, offset - chunk_size))
     await get_all_apps_from_worker(query.message, state)

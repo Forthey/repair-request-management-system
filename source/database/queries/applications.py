@@ -26,12 +26,18 @@ changeable_app_field_to_str = {
 }
 
 
-async def count_applications() -> int:
+async def count_worker_applications(telegram_id: int) -> int:
     session: AsyncSession
     async with async_session_factory() as session:
         query = (
             select(count())
             .select_from(ApplicationORM)
+            .where(
+                or_(
+                    ApplicationORM.repairer_id == telegram_id,
+                    ApplicationORM.editor_id == telegram_id
+                )
+            )
         )
 
         return (await session.execute(query)).scalar_one()

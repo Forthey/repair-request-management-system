@@ -8,6 +8,7 @@ from bot.utility.render_buttons import render_keyboard_buttons
 from bot.auth_filter import AuthFilter
 
 # Nested routers
+from bot.routers.utility_commands import get_id_from_username
 from bot.routers.new_handlers import new_base
 from bot.routers.seacrh_handlers import search_base
 from bot.routers.help_handlers import help_base
@@ -62,6 +63,7 @@ async def print_help(message: Message):
 
 
 router.include_routers(
+    get_id_from_username.router,
     new_base.router,
     search_base.router,
     help_base.router,

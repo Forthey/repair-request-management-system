@@ -4,7 +4,7 @@ from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from bot.states.worker import WorkerState
+from bot.states.worker import AddWorkerState
 
 from bot.utility.get_id_by_username import get_user_id
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
@@ -37,10 +37,10 @@ async def add_begin(message: Message, state: FSMContext):
         parse_mode=ParseMode.MARKDOWN_V2
     )
 
-    await state.set_state(WorkerState.writing_worker_username)
+    await state.set_state(AddWorkerState.writing_worker_username)
 
 
-@router.message(StateFilter(WorkerState.writing_worker_username), F.text)
+@router.message(StateFilter(AddWorkerState.writing_worker_username), F.text)
 async def add_username(message: Message, state: FSMContext):
     username = message.text
     if "@" not in username:
@@ -73,10 +73,10 @@ async def add_username(message: Message, state: FSMContext):
              f"Отчество можно не указывать",
         parse_mode=ParseMode.MARKDOWN_V2
     )
-    await state.set_state(WorkerState.writing_worker_fio)
+    await state.set_state(AddWorkerState.writing_worker_fio)
 
 
-@router.message(StateFilter(WorkerState.writing_worker_fio), F.text)
+@router.message(StateFilter(AddWorkerState.writing_worker_fio), F.text)
 async def add_name(message: Message, state: FSMContext):
     fio: list[str] = message.text.split(" ")
     problems_occurred = False
@@ -117,10 +117,10 @@ async def add_name(message: Message, state: FSMContext):
         parse_mode=ParseMode.MARKDOWN_V2,
         reply_markup=render_inline_buttons(access_rights, 2)
     )
-    await state.set_state(WorkerState.choosing_worker_access_rights)
+    await state.set_state(AddWorkerState.choosing_worker_access_rights)
 
 
-@router.callback_query(StateFilter(WorkerState.choosing_worker_access_rights), F.data.in_(access_rights))
+@router.callback_query(StateFilter(AddWorkerState.choosing_worker_access_rights), F.data.in_(access_rights))
 async def add_access_rights(callback: CallbackQuery, state: FSMContext):
     access_right = callback.data
 
@@ -139,10 +139,10 @@ async def add_access_rights(callback: CallbackQuery, state: FSMContext):
         reply_markup=render_inline_buttons({"confirm_worker_add": "Подтвердить"}, 1)
     )
 
-    await state.set_state(WorkerState.add_worker_confirmation)
+    await state.set_state(AddWorkerState.add_worker_confirmation)
 
 
-@router.callback_query(StateFilter(WorkerState.add_worker_confirmation), F.data == "confirm_worker_add")
+@router.callback_query(StateFilter(AddWorkerState.add_worker_confirmation), F.data == "confirm_worker_add")
 async def confirm_worker(callback: CallbackQuery, state: FSMContext):
     worker_data = await state.get_data()
     worker = WorkerAdd.model_validate(worker_data, from_attributes=True)
@@ -151,7 +151,7 @@ async def confirm_worker(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer(
             text="Работник с таким именем уже существует",
         )
-        await state.set_state(WorkerState.choosing_worker_access_rights)
+        await state.set_state(AddWorkerState.choosing_worker_access_rights)
         return
 
     await callback.answer(
@@ -168,7 +168,7 @@ async def confirm_worker(callback: CallbackQuery, state: FSMContext):
     await state.clear()
 
 
-@router.message(StateFilter(WorkerState.choosing_worker_access_rights))
+@router.message(StateFilter(AddWorkerState.choosing_worker_access_rights))
 async def access_rights_chosen_incorrectly(message: Message, state: FSMContext):
     await message.answer(
         text=f"Пожалуйста, выберите права доступа",
