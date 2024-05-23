@@ -21,8 +21,8 @@ async def load_workers():
 async def reload_worker(telegram_id: int):
     redis: Redis
     async with Redis(connection_pool=pool) as redis:
-        worker: Worker = await get_worker(telegram_id)
-        if worker is None:
+        worker: Worker = await get_worker(telegram_id, True)
+        if not worker.active:
             await redis.delete(f"user:{telegram_id}")
             return
         await redis.set(f"user:{telegram_id}", worker.access_right)

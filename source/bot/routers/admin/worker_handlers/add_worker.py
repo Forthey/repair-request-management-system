@@ -147,7 +147,9 @@ async def confirm_worker(callback: CallbackQuery, state: FSMContext):
     worker_data = await state.get_data()
     worker = WorkerAdd.model_validate(worker_data, from_attributes=True)
 
-    if not await w.add_worker(worker):
+    worker_id = await w.add_worker(worker)
+
+    if not worker_id:
         await callback.message.answer(
             text="Работник с таким именем уже существует",
         )
@@ -158,7 +160,7 @@ async def confirm_worker(callback: CallbackQuery, state: FSMContext):
         text=f"Работник добавлен"
     )
 
-    await reload_worker(worker.telegram_id)
+    await reload_worker(worker_id)
 
     await callback.message.answer(
         text="Выберите действие",

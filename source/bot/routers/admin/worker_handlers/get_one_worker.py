@@ -129,6 +129,7 @@ async def do_update_worker_state(query: CallbackQuery, state: FSMContext, **fiel
         await query.answer("Что-то пошло не так...")
         return
     worker = await update_worker(worker_id, **fields)
+
     if worker is None:
         await query.answer("Что-то пошло не так...")
         return
