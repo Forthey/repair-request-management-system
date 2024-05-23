@@ -10,7 +10,12 @@ from config import settings
 from redis_db.workers import load_workers
 
 # Enable logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    filemode="../logs/error.log",
+    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+    datefmt='%H:%M:%S',
+    level=logging.ERROR
+)
 
 
 async def main():
@@ -30,7 +35,12 @@ async def main():
     ]
     await bot.set_my_commands(bot_commands)
     await bot.delete_webhook(drop_pending_updates=True)
-    await dp.start_polling(bot)
+
+    try:
+        await dp.start_polling(bot)
+    except Exception as e:
+        logging.error(e)
+        return
 
 # asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 

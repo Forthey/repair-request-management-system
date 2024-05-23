@@ -13,7 +13,6 @@ from sqlalchemy.dialects.postgresql import insert
 
 from database.models.worker_orm import WorkerORM
 
-
 # revision identifiers, used by Alembic.
 revision: str = 'ab82b282b78c'
 down_revision: Union[str, None] = '629229bef5c5'
@@ -35,21 +34,23 @@ def upgrade() -> None:
         access_right="Админ"
     )
 
-
     op.execute(
         insert(WorkerORM)
-        .values(
-            telegram_id="1319924607",
-            name="Никита",
-            surname="Дрекалов",
-            access_right="Админ"
-        )
-        .values(
-            telegram_id="1663663528",
-            name="Никита",
-            surname="Адейкин",
-            access_right="Админ"
-        )
+        .values([
+            {
+                "telegram_id": "1663663528",
+                "name": "Никита",
+                "surname": "Адейкин",
+                "access_right": "Админ"
+            },
+            {
+                "telegram_id": "1319924607",
+                "name": "Никита",
+                "surname": "Дрекалов",
+                "access_right": "Админ"
+
+            }
+        ])
         .on_conflict_do_nothing(
             index_elements=['telegram_id']
         )

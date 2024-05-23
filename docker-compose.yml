@@ -38,8 +38,6 @@ services:
         condition: service_started
       redis:
         condition: service_started
-    environment:
-      - PYTHONUNBUFFERED=1
     volumes:
       - ./logs:/server/logs
 

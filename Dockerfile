@@ -4,6 +4,7 @@ WORKDIR /server
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 
+ENV PYTHONUNBUFFERED=1
 
 RUN alembic init source/database/migrations | echo "Alembic initialized, skipping"
 COPY alembic.ini .
@@ -16,4 +17,4 @@ COPY . .
 
 WORKDIR /server/source
 #CMD while true; do echo "hello"; sleep 2; done
-CMD alembic -c ../alembic.ini upgrade head && python main.py > ../logs/log.txt
+CMD alembic -c ../alembic.ini upgrade head && python main.py > ../logs/main.log
