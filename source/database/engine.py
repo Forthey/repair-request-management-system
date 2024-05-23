@@ -4,7 +4,7 @@ from config import settings
 
 
 async_engine = create_async_engine(
-    url=settings.get_psycopg_URL,
+    url=settings.get_psycopg_url,
     echo=False,
     pool_size=5,
     max_overflow=10

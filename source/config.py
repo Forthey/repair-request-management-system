@@ -39,7 +39,7 @@ class Settings(BaseSettings):
         return self.TG_API_HASH
 
     @property
-    def get_psycopg_URL(self):
+    def get_psycopg_url(self):
         return f"postgresql+psycopg://{self.DB_POSTGRES_USER}:{self.DB_POSTGRES_PASSWORD}@{self.DB_POSTGRES_HOST}:{str(self.DB_POSTGRES_PORT)}/{str(self.DB_POSTGRES_NAME)}"
 
     model_config = SettingsConfigDict(env_file="../.env")
