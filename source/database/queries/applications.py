@@ -10,6 +10,7 @@ from database.engine import async_session_factory
 
 from database.models.application_orm import ApplicationORM, ApplicationChangeLogORM
 from database.models.other_orms import ApplicationReasonORM
+from database.queries.search import search_database
 
 from schemas.applications import ApplicationAdd, Application, ApplicationFull, ApplicationWithReasons, \
     ApplicationChangeLog
@@ -89,47 +90,16 @@ async def get_application(app_id: int) -> ApplicationFull | None:
 
 
 async def search_applications(args: list[str]) -> list[Application]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        if len(args) == 0:
-            query = (
-                select(ApplicationORM)
-                .order_by(ApplicationORM.id.desc())
-                .limit(50)
-            )
-
-            apps_orm = (await session.execute(query)).scalars().all()
-
-            return [Application.model_validate(app, from_attributes=True) for app in apps_orm]
-
-        query = (
-            select(ApplicationORM)
-            .where(
-                or_(
-                    ApplicationORM.client_name.icontains(args[0]),
-                    ApplicationORM.machine_name.icontains(args[0]),
-                    ApplicationORM.address_name.icontains(args[0])
-                )
-            )
-            .order_by(ApplicationORM.id.desc())
-        )
-
-        apps_orm = (await session.execute(query)).scalars().all()
-
-        apps: list[Application] = []
-        args = args[1:]
-        for app in apps_orm:
-            arg_not_matched = False
-            for arg in args:
-                if arg.lower() not in str(app.client_name).lower() and \
-                        arg.lower() not in str(app.machine_name).lower() and \
-                        arg.lower() not in str(app.address_name).lower():
-                    arg_not_matched = True
-                    break
-            if not arg_not_matched:
-                apps.append(Application.model_validate(app, from_attributes=True))
-
-        return apps
+    return await search_database(
+        ApplicationORM,
+        {
+            "client_name": ApplicationORM.client_name,
+            "machine_name": ApplicationORM.machine_name,
+            "address_name": ApplicationORM.address_name
+        },
+        args, Application,
+        [ApplicationORM.closed_at.desc()],
+    )
 
 
 async def add_application(application: ApplicationAdd, app_reasons: list[str]) -> int | None:

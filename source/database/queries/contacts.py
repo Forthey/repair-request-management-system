@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.engine import async_session_factory
 
 from database.models.contact_orm import ContactORM
+from database.queries.search import search_database
 
 from schemas.contacts import ContactAdd, Contact
 
@@ -41,54 +42,18 @@ async def add_contact(contact: ContactAdd) -> int | None:
 
 
 async def search_contacts(args: list[str]) -> list[Contact]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        if len(args) == 0:
-            query = (
-                select(ContactORM)
-                .order_by(ContactORM.name, ContactORM.surname, ContactORM.patronymic)
-                .limit(50)
-            )
-
-            contacts = (await session.execute(query)).scalars().all()
-
-            return [Contact.model_validate(contact, from_attributes=True) for contact in contacts]
-
-        query = (
-            select(ContactORM)
-            .where(
-                or_(
-                    ContactORM.client_name.icontains(args[0]),
-                    ContactORM.name.icontains(args[0]),
-                    ContactORM.surname.icontains(args[0]),
-                    ContactORM.patronymic.icontains(args[0]),
-                    ContactORM.company_position.icontains(args[0])
-                )
-            )
-            .order_by(ContactORM.name)
-            .order_by(ContactORM.surname)
-            .order_by(ContactORM.patronymic)
-        )
-
-        contacts_orm = (await session.execute(query)).scalars().all()
-        print(contacts_orm)
-
-        contacts: list[Contact] = []
-        args = args[1:]
-        for contact in contacts_orm:
-            arg_not_matched = False
-            for arg in args:
-                if arg.lower() not in str(contact.client_name).lower() and \
-                        arg.lower() not in str(contact.name).lower() and \
-                        arg.lower() not in str(contact.surname).lower() and \
-                        arg.lower() not in str(contact.patronymic).lower() and \
-                        arg.lower() not in str(contact.company_position).lower():
-                    arg_not_matched = True
-                    break
-            if not arg_not_matched:
-                contacts.append(Contact.model_validate(contact, from_attributes=True))
-
-        return contacts
+    return await search_database(
+        ContactORM,
+        {
+            "client_name": ContactORM.client_name,
+            "name": ContactORM.name,
+            "surname": ContactORM.surname,
+            "patronymic": ContactORM.patronymic,
+            "company_position": ContactORM.company_position
+        },
+        args, Contact,
+        [ContactORM.name, ContactORM.surname, ContactORM.patronymic]
+    )
 
 
 async def update_fields(contact_id: int, **fields) -> int | None:

@@ -5,6 +5,7 @@ from sqlalchemy.sql.functions import count
 
 from database.engine import async_session_factory
 from database.models.address_orm import AddressORM
+from database.queries.search import search_database
 from schemas.addresses import AddressAdd, Address
 
 
@@ -57,38 +58,9 @@ async def address_exists(address: str) -> bool:
 
 
 async def search_addresses(args: list[str]) -> list[Address]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        if len(args) == 0:
-            query = (
-                select(AddressORM)
-                .order_by(AddressORM.name)
-                .limit(50)
-            )
-            addresses_orm = (await session.execute(query)).scalars().all()
-
-            return [Address.model_validate(address, from_attributes=True) for address in addresses_orm]
-
-        query = (
-            select(AddressORM)
-            .where(AddressORM.name.icontains(args[0]))
-            .order_by(AddressORM.name)
-        )
-
-        addresses_orm = (await session.execute(query)).scalars().all()
-
-        addresses: list[Address] = []
-        args = args[1:]
-        for address in addresses_orm:
-            arg_not_matched = False
-            for arg in args:
-                if arg.lower() not in str(address.name).lower():
-                    arg_not_matched = True
-                    break
-            if not arg_not_matched:
-                addresses.append(Address.model_validate(address, from_attributes=True))
-
-        return addresses
+    return await search_database(
+        AddressORM, {"name": AddressORM.name}, args, Address, [AddressORM.name]
+    )
 
 
 async def address_belongs_to_client(client_name: str, address: str) -> bool:

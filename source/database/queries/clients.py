@@ -6,6 +6,7 @@ from sqlalchemy.sql.functions import count
 from database.engine import async_session_factory
 
 from database.models.client_orm import ClientORM
+from database.queries.search import search_database
 
 from schemas.clients import ClientAdd, Client
 
@@ -40,35 +41,6 @@ async def name_exists(name: str) -> bool:
 
 
 async def search_clients(args: list[str]) -> list[Client]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        if len(args) == 0:
-            query = (
-                select(ClientORM)
-                .order_by(ClientORM.name)
-                .limit(50)
-            )
-            clients_orm = (await session.execute(query)).scalars().all()
-
-            return [Client.model_validate(address, from_attributes=True) for address in clients_orm]
-
-        query = (
-            select(ClientORM)
-            .where(ClientORM.name.icontains(args[0]))
-            .order_by(ClientORM.name)
-        )
-
-        clients_orm = (await session.execute(query)).scalars().all()
-
-        clients: list[Client] = []
-        args = args[1:]
-        for client in clients_orm:
-            arg_not_matched = False
-            for arg in args:
-                if arg.lower() not in str(client.name).lower():
-                    arg_not_matched = True
-                    break
-            if not arg_not_matched:
-                clients.append(Client.model_validate(client, from_attributes=True))
-
-        return clients
+    return await search_database(
+        ClientORM, {"name": ClientORM.name}, args, Client, [ClientORM.name]
+    )

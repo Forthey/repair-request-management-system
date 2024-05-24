@@ -5,6 +5,7 @@ from database.engine import async_session_factory, AsyncSession
 
 from database.models.application_orm import ApplicationORM
 from database.models.worker_orm import WorkerORM
+from database.queries.search import search_database
 
 from schemas.workers import WorkerAdd, Worker
 
@@ -40,52 +41,16 @@ async def get_workers() -> list[Worker]:
 
 
 async def search_workers(args: list[str]) -> list[Worker]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        if len(args) == 0:
-            query = (
-                select(WorkerORM)
-                .filter_by(active=True)
-                .order_by(WorkerORM.surname, WorkerORM.name, WorkerORM.patronymic)
-                .limit(50)
-            )
-
-            workers_orm = (await session.execute(query)).scalars().all()
-
-            return [Worker.model_validate(worker_orm, from_attributes=True) for worker_orm in workers_orm]
-
-        query = (
-            select(WorkerORM)
-            .filter_by(active=True)
-            .where(
-                or_(
-                    WorkerORM.surname.icontains(args[0]),
-                    WorkerORM.name.icontains(args[0]),
-                    WorkerORM.patronymic.icontains(args[0]),
-                    WorkerORM.access_right.icontains(args[0])
-                )
-            )
-            .order_by(WorkerORM.surname, WorkerORM.name, WorkerORM.patronymic)
-            .limit(50)
-        )
-
-        workers_orm = (await session.execute(query)).scalars().all()
-
-        workers: list[Worker] = []
-        args = args[1:]
-        for worker in workers_orm:
-            arg_not_matched = False
-            for arg in args:
-                if arg.lower() not in str(worker.surname).lower() and \
-                        arg not in str(worker.name).lower() and \
-                        arg not in str(worker.patronymic).lower() and \
-                        arg not in str(worker.access_right).lower():
-                    arg_not_matched = True
-                    break
-            if not arg_not_matched:
-                workers.append(Worker.model_validate(worker, from_attributes=True))
-
-        return workers
+    return await search_database(
+        WorkerORM, {
+            "surname": WorkerORM.surname,
+            "name": WorkerORM.name,
+            "patronymic": WorkerORM.patronymic,
+            "access_right": WorkerORM.access_right
+        }, args, Worker,
+        [WorkerORM.surname, WorkerORM.name, WorkerORM.patronymic],
+        active=True
+    )
 
 
 async def get_worker(telegram_id: int, force: bool = False) -> Worker | None:

@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session_factory
 from database.models.machine_orm import MachineORM
+from database.queries.search import search_database
 from schemas.machines import Machine
 
 # from yandex_disk_storage.base import upload_file
@@ -43,35 +44,6 @@ async def find_machine(name: str) -> bool:
 
 
 async def search_machines(args: list[str]) -> list[Machine]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        if len(args) == 0:
-            query = (
-                select(MachineORM)
-                .order_by(MachineORM.name)
-                .limit(50)
-            )
-            machines_orm = (await session.execute(query)).scalars().all()
-
-            return [Machine.model_validate(address, from_attributes=True) for address in machines_orm]
-
-        query = (
-            select(MachineORM)
-            .where(MachineORM.name.icontains(args[0]))
-            .order_by(MachineORM.name)
-        )
-
-        machines_orm = (await session.execute(query)).scalars().all()
-
-        machines: list[Machine] = []
-        args = args[1:]
-        for machine in machines_orm:
-            arg_not_matched = False
-            for arg in args:
-                if arg.lower() not in str(machine.name).lower():
-                    arg_not_matched = True
-                    break
-            if not arg_not_matched:
-                machines.append(Machine.model_validate(machine, from_attributes=True))
-
-        return machines
+    return await search_database(
+        MachineORM, {"name": MachineORM.name}, args, Machine, MachineORM.name
+    )

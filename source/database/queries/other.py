@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session_factory
 from database.models.other_orms import CompanyPositionORM, ApplicationReasonORM, CloseReasonORM, CompanyActivityORM
+from database.queries.search import search_database
 from schemas.other import ApplicationReason, CloseReason, CompanyActivity, CompanyPosition
 
 
@@ -37,38 +38,9 @@ async def find_company_position(position: str) -> bool:
 
 
 async def search_company_position(args: list[str]) -> list[CompanyPosition]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        if len(args) == 0:
-            query = (
-                select(CompanyPositionORM)
-                .order_by(CompanyPositionORM.name)
-                .limit(50)
-            )
-
-            positions_orm = (await session.execute(query)).scalars().all()
-
-            return [CompanyPosition.model_validate(position, from_attributes=True) for position in positions_orm]
-
-        query = (
-            select(CompanyPositionORM)
-            .where(CompanyPositionORM.name.icontains(args[0]))
-        )
-
-        positions_orm = (await session.execute(query)).scalars().all()
-
-        positions: list[CompanyPosition] = []
-        args = args[1:]
-        for position in positions_orm:
-            arg_not_matched = False
-            for arg in args:
-                if arg.lower() not in str(position.name).lower():
-                    arg_not_matched = True
-                    break
-            if not arg_not_matched:
-                positions.append(CompanyPosition.model_validate(position, from_attributes=True))
-
-        return positions
+    return await search_database(
+        CompanyPositionORM, {"name": CompanyPositionORM.name}, args, CompanyPosition, [CompanyPositionORM.name]
+    )
 
 
 async def add_app_reason(app_id: int, reason: str) -> str | None:
@@ -127,38 +99,9 @@ async def add_close_reason(reason: str) -> str | None:
 
 
 async def search_close_reason(args: list[str]) -> list[CloseReason]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        if len(args) == 0:
-            query = (
-                select(CloseReasonORM)
-                .order_by(CloseReasonORM.name)
-                .limit(50)
-            )
-
-            close_reasons_orm = (await session.execute(query)).scalars().all()
-
-            return [CloseReason.model_validate(reason, from_attributes=True) for reason in close_reasons_orm]
-
-        query = (
-            select(CloseReasonORM)
-            .where(CloseReasonORM.name.icontains(args[0]))
-        )
-
-        close_reasons_orm = (await session.execute(query)).scalars().all()
-
-        close_reasons: list[CloseReason] = []
-        args = args[1:]
-        for close_reason in close_reasons_orm:
-            arg_not_matched = False
-            for arg in args:
-                if arg.lower() not in str(close_reason.name).lower():
-                    arg_not_matched = True
-                    break
-            if not arg_not_matched:
-                close_reasons.append(CloseReason.model_validate(close_reason, from_attributes=True))
-
-        return close_reasons
+    return await search_database(
+        CloseReasonORM, {"name": CloseReasonORM.name}, args, CloseReason, [CloseReasonORM.name]
+    )
 
 
 async def find_close_reason(reason: str) -> bool:
@@ -191,35 +134,6 @@ async def add_company_activity(name: str) -> str | None:
 
 
 async def search_company_activity(args: list[str]) -> list[CompanyActivity]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        if len(args) == 0:
-            query = (
-                select(CompanyActivityORM)
-                .order_by(CompanyActivityORM.name)
-                .limit(50)
-            )
-
-            company_activities_orm = (await session.execute(query)).scalars().all()
-
-            return [CompanyActivity.model_validate(activity, from_attributes=True) for activity in company_activities_orm]
-
-        query = (
-            select(CompanyActivityORM)
-            .where(CompanyActivityORM.name.icontains(args[0]))
-        )
-
-        company_activities_orm = (await session.execute(query)).scalars().all()
-
-        company_activities: list[CompanyActivity] = []
-        args = args[1:]
-        for company_activity in company_activities_orm:
-            arg_not_matched = False
-            for arg in args:
-                if arg.lower() not in str(company_activity.name).lower():
-                    arg_not_matched = True
-                    break
-            if not arg_not_matched:
-                company_activities.append(CompanyActivity.model_validate(company_activity, from_attributes=True))
-
-        return company_activities
+    return await search_database(
+        CompanyActivityORM, {"name": CompanyActivityORM.name}, args, CompanyActivity, [CompanyActivityORM.name]
+    )
