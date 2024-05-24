@@ -11,10 +11,11 @@ from redis_db.workers import load_workers
 
 # Enable logging
 logging.basicConfig(
-    filemode="../logs/error.log",
+    filename="../logs/main.log",
+    filemode="a",
     format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
     datefmt='%H:%M:%S',
-    level=logging.ERROR
+    level=logging.INFO
 )
 
 
