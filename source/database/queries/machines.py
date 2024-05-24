@@ -12,8 +12,6 @@ from schemas.machines import Machine
 
 
 async def add_machine(name: str, file_id: str | None = None) -> bool:
-    # photo_url = await upload_file(f"{name}.jpg", photo) if photo is not None else None
-
     session: AsyncSession
     async with async_session_factory() as session:
         query = (

@@ -49,8 +49,7 @@ async def get_applications(offset: int = 0, limit: int = 3, **params) -> list[Ap
         query = (
             select(ApplicationORM)
             .options(selectinload(ApplicationORM.reasons))
-            .order_by(ApplicationORM.closed_at.desc())
-            .order_by(ApplicationORM.created_at.desc())
+            .order_by(ApplicationORM.closed_at.desc(), ApplicationORM.created_at.desc())
             .offset(offset)
             .limit(limit)
         )

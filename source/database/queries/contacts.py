@@ -46,9 +46,7 @@ async def search_contacts(args: list[str]) -> list[Contact]:
         if len(args) == 0:
             query = (
                 select(ContactORM)
-                .order_by(ContactORM.name)
-                .order_by(ContactORM.surname)
-                .order_by(ContactORM.patronymic)
+                .order_by(ContactORM.name, ContactORM.surname, ContactORM.patronymic)
                 .limit(50)
             )
 

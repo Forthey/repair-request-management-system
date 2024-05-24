@@ -31,7 +31,7 @@ async def get_workers() -> list[Worker]:
     async with async_session_factory() as session:
         query = (
             select(WorkerORM)
-            .where(WorkerORM.active == True)
+            .filter_by(active=True)
         )
 
         workers_orm = (await session.execute(query)).scalars().all()
@@ -45,10 +45,8 @@ async def search_workers(args: list[str]) -> list[Worker]:
         if len(args) == 0:
             query = (
                 select(WorkerORM)
-                .where(WorkerORM.active == True)
-                .order_by(WorkerORM.surname)
-                .order_by(WorkerORM.name)
-                .order_by(WorkerORM.patronymic)
+                .filter_by(active=True)
+                .order_by(WorkerORM.surname, WorkerORM.name, WorkerORM.patronymic)
                 .limit(50)
             )
 
@@ -58,7 +56,7 @@ async def search_workers(args: list[str]) -> list[Worker]:
 
         query = (
             select(WorkerORM)
-            .where(WorkerORM.active == True)
+            .filter_by(active=True)
             .where(
                 or_(
                     WorkerORM.surname.icontains(args[0]),
@@ -67,9 +65,7 @@ async def search_workers(args: list[str]) -> list[Worker]:
                     WorkerORM.access_right.icontains(args[0])
                 )
             )
-            .order_by(WorkerORM.surname)
-            .order_by(WorkerORM.name)
-            .order_by(WorkerORM.patronymic)
+            .order_by(WorkerORM.surname, WorkerORM.name, WorkerORM.patronymic)
             .limit(50)
         )
 
@@ -100,7 +96,7 @@ async def get_worker(telegram_id: int, force: bool = False) -> Worker | None:
             .where(WorkerORM.telegram_id == telegram_id)
         )
         if not force:
-            query = query.where(WorkerORM.active == False)
+            query = query.where(WorkerORM.active == True)
 
         worker_orm = (await session.execute(query)).scalars().one_or_none()
         result = Worker.model_validate(worker_orm, from_attributes=True) if worker_orm else None
