@@ -24,6 +24,15 @@ commands = [
     "Отмена"
 ]
 
+buttons = {
+    "decline_take_app": "Выбрать другую",
+    "show_app_logs": "Просмотреть историю изменений",
+    "confirm_take_app": "Взять",
+    "confirm_edit_app": "Изменить",
+    "confirm_close_app": "Закрыть",
+    "confirm_transfer_app": "Назначить рабочего",
+}
+
 
 @router.message(StateFilter(None), F.text.lower() == "выбрать заявку")
 async def take_app(message: Message, state: FSMContext):
@@ -43,25 +52,26 @@ async def choosing_app_id(message: Message, state: FSMContext):
 
     await state.update_data(app_id=app_id)
 
-    buttons = {
-        "decline_take_app": "Выбрать другую",
-        "show_app_logs": "Просмотреть историю изменений"
+    active_buttons = {
+        "decline_take_app": buttons["decline_take_app"],
+        "show_app_logs": buttons["show_app_logs"]
     }
     if app.closed_at is None:
         if app.repairer_id is None:
-            buttons["confirm_take_app"] = "Взять"
-        buttons["confirm_edit_app"] = "Изменить"
-        buttons["confirm_close_app"] = "Закрыть"
+            active_buttons["confirm_take_app"] = buttons["confirm_take_app"]
+        active_buttons["confirm_edit_app"] = buttons["confirm_edit_app"]
+        active_buttons["confirm_close_app"] = buttons["confirm_close_app"]
 
     if await check_admin_rights(message.from_user.id):
-        buttons["confirm_transfer_app"] = "Назначить рабочего"
+        active_buttons["confirm_transfer_app"] = buttons["confirm_transfer_app"]
 
     await message.answer(
         full_app_to_str(app),
-        reply_markup=render_inline_buttons(buttons, 1),
+        reply_markup=render_inline_buttons(active_buttons, 1),
     )
 
-    if app.address.photo_url is not None or app.machine.photo_url is not None:
+    if app.address is not None and app.address.photo_url is not None or \
+            app.machine is not None and app.machine.photo_url is not None:
         album_builder = MediaGroupBuilder(
             caption="Фотографии, относящиеся к заявке"
         )
@@ -170,20 +180,22 @@ async def transfer_app_to_repairer(message: Message, state: FSMContext):
     )
 
 
-@router.callback_query(StateFilter(ChooseOneApplicationState.app_transfer_confirmation), F.data == "decline_app_transfer")
+@router.callback_query(StateFilter(ChooseOneApplicationState.app_transfer_confirmation),
+                       F.data == "decline_app_transfer")
 async def decline_app_transfer(query: CallbackQuery, state: FSMContext):
     await query.answer("Отменено")
     await query.message.answer("Введите id работника")
     await state.set_state(ChooseOneApplicationState.choosing_repairer_id)
 
 
-@router.callback_query(StateFilter(ChooseOneApplicationState.app_transfer_confirmation), F.data == "do_confirm_app_transfer")
+@router.callback_query(StateFilter(ChooseOneApplicationState.app_transfer_confirmation),
+                       F.data == "do_confirm_app_transfer")
 async def do_confirm_app_transfer(query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
     app_id = data.get("app_id")
     repairer_id = data.get("repairer_id")
 
-    if repairer_id is None or app_id is None or not await take_application(app_id, repairer_id) :
+    if repairer_id is None or app_id is None or not await take_application(app_id, repairer_id):
         await query.answer("Что-то пошло не так...")
         return
 

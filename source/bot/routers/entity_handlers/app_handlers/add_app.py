@@ -7,21 +7,16 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 from pydantic import ValidationError
 
-from bot.commands import base_commands
-from bot.states.application import AddApplicationState
-from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
-from bot.utility.get_id_by_username import get_user_id
-import database.queries.applications as db_apps
-import database.queries.clients as db_clients
-import database.queries.contacts as db_contacts
-import database.queries.machines as db_machines
-import database.queries.addresses as db_addresses
-import database.queries.other as db_other
-from schemas.addresses import AddressAdd, Address
-from schemas.applications import ApplicationAdd
-from schemas.contacts import ContactAdd
+from bot.routers.entity_handlers.app_handlers.app_fields_parser import parse_app_client_name, parse_app_contact, \
+    parse_app_reason, parse_app_machine, parse_app_address, parse_app_est_repair_date_and_duration
 
-ApplicationAdd.model_rebuild()
+from bot.states.application import AddApplicationState
+from bot.commands import base_commands
+from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
+
+import database.queries.applications as db_apps
+from schemas.applications import ApplicationAdd
+
 
 router = Router()
 
@@ -75,23 +70,7 @@ async def choosing_app_client(message: Message, state: FSMContext):
         return
 
     if message.text != "Далее":
-        client_name = message.text
-        if not await db_clients.name_exists(client_name):
-            await message.answer("Такого клиента не существует")
-            return
-
-        await state.update_data(client_name=client_name)
-        contact_id = (await state.get_data()).get("contact_id")
-
-        if contact_id is not None:
-            if not await db_contacts.contact_belongs_to_client(client_name, contact_id):
-                await message.answer("Контакт не относится к клиенту")
-                return
-            await db_contacts.update_fields(contact_id, client_name=client_name)
-
-        address = (await state.get_data()).get("address_name")
-        if address is not None and not db_addresses.address_belongs_to_client(client_name, address):
-            await message.answer("Адрес не относится к клиенту")
+        if not await parse_app_client_name(message, state):
             return
 
     await state.set_state(AddApplicationState.choosing_app_contact)
@@ -106,36 +85,8 @@ async def choosing_app_contact(message: Message, state: FSMContext):
         return
 
     if message.text != "Далее":
-        contact_id = ""
-        client_name = (await state.get_data()).get("client_name")
-        args = message.text.split(" ")
-        if args[0] == "/add":
-            contact: ContactAdd
-            if len(args) != 3:
-                await message.answer("Неправильный формат команды /add")
-                return
-            name = args[1]
-            if re.match(r"[^@]+@[^@]+\.[^@]+", args[2]):
-                contact = ContactAdd(name=name, email=args[2], client_name=client_name)
-            else:
-                contact = ContactAdd(name=name, phone1=args[2], client_name=client_name)
-
-            contact_id = await db_contacts.add_contact(contact)
-        else:
-            contact_id = message.text
-            try:
-                contact_id = int(contact_id)
-            except ValueError:
-                await message.answer("Указан не id")
-                return
-            if not await db_contacts.contact_exists(int(contact_id)):
-                await message.answer("Контакта с таким id не существует")
-                return
-            if client_name is not None and not await db_contacts.contact_belongs_to_client(client_name, contact_id):
-                await message.answer("Контакт не относится к клиенту")
-                return
-
-        await state.update_data(contact_id=contact_id)
+        if not await parse_app_contact(message, state):
+            return
 
     await state.set_state(AddApplicationState.choosing_app_reasons)
     await message.answer(states_strings[AddApplicationState.choosing_app_reasons])
@@ -153,17 +104,8 @@ async def choosing_app_reasons(message: Message, state: FSMContext):
         await message.answer(states_strings[AddApplicationState.choosing_app_machine])
         return
 
-    reason = message.text
-    reasons = (await state.get_data()).get("app_reasons")
-    if reasons is None:
-        reasons: list[str] = [reason]
-    else:
-        for added_reason in reasons:
-            if added_reason == reason:
-                await message.answer("Такая причина уже была добавлена")
-                return
-        reasons.append(reason)
-    await state.update_data(app_reasons=reasons)
+    if not await parse_app_reason(message, state):
+        return
 
 
 @router.message(StateFilter(AddApplicationState.choosing_app_machine), F.text)
@@ -174,12 +116,8 @@ async def choosing_app_machine(message: Message, state: FSMContext):
         return
 
     if message.text != "Далее":
-        machine = message.text
-        if not await db_machines.find_machine(machine):
-            await message.answer("Такого станка не существует")
+        if not await parse_app_machine(message, state):
             return
-
-        await state.update_data(machine_name=machine)
 
     await state.set_state(AddApplicationState.choosing_app_address)
     await message.answer(states_strings[AddApplicationState.choosing_app_address])
@@ -193,30 +131,8 @@ async def choosing_app_address(message: Message, state: FSMContext):
         return
 
     if message.text != "Далее":
-        args = message.text.split(" ")
-        client_name = (await state.get_data()).get("client_name")
-        address: str
-        if args[0] == "/add":
-            if client_name is None:
-                await message.answer("Не выбран клиент, невозможно добавить адрес")
-                return
-
-            if len(args) == 1:
-                await message.answer("Неправильный формат команды /add")
-                return
-
-            address = " ".join(args[1:])
-            if not await db_addresses.add_address(AddressAdd(client_name=client_name, name=address)):
-                await message.answer("Такое адрес уже существует")
-                return
-        else:
-            address = message.text
-            address_full: Address | None = await db_addresses.get_address(client_name, address)
-            if address_full is None:
-                await message.answer("Такого адреса у клиента не существует")
-                return
-
-        await state.update_data(address_name=address)
+        if not await parse_app_address(message, state):
+            return
 
     await state.set_state(AddApplicationState.writing_app_est_repair_date_and_duration)
     await message.answer(states_strings[AddApplicationState.writing_app_est_repair_date_and_duration])
@@ -230,16 +146,8 @@ async def writing_app_est_repair_date_and_duration(message: Message, state: FSMC
         return
 
     if message.text != "Далее":
-        args = message.text.split(" ")
-        if not (1 <= len(args) <= 2):
-            await message.answer("Неправильный формат")
+        if not await parse_app_est_repair_date_and_duration(message, state):
             return
-        if len(args) > 0 and re.match(r"^[0-3][0-9].[0-1][0-9].20[2-9][0-9]$", args[0]):
-            date_args = args[0].split(".")
-            est_repair_date = datetime.datetime(int(date_args[2]), int(date_args[1]), int(date_args[0]))
-            await state.update_data(est_repair_date=est_repair_date)
-        if len(args) > 1:
-            await state.update_data(est_repair_duration_hours=args[1])
 
     await state.set_state(AddApplicationState.writing_app_notes)
     await message.answer(states_strings[AddApplicationState.writing_app_notes])
