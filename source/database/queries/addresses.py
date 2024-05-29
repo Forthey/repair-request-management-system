@@ -5,6 +5,7 @@ from sqlalchemy.sql.functions import count
 
 from database.engine import async_session_factory
 from database.models.address_orm import AddressORM
+from database.queries.new import add_to_database
 from database.queries.search import search_database
 from schemas.addresses import AddressAdd, Address
 
@@ -29,21 +30,9 @@ async def get_address(client_name: str, address_name: str) -> Address | None:
 
 
 async def add_address(address: AddressAdd) -> str | None:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            insert(AddressORM)
-            .values(**address.model_dump())
-            .returning(AddressORM.name)
-        )
-
-        try:
-            address_name = (await session.execute(query)).scalar_one_or_none()
-
-            await session.commit()
-            return address_name
-        except IntegrityError:
-            return None
+    return await add_to_database(
+        AddressORM, AddressORM.name, **address.model_dump()
+    )
 
 
 async def address_exists(address: str) -> bool:

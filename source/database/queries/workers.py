@@ -5,26 +5,16 @@ from database.engine import async_session_factory, AsyncSession
 
 from database.models.application_orm import ApplicationORM
 from database.models.worker_orm import WorkerORM
+from database.queries.new import add_to_database
 from database.queries.search import search_database
 
 from schemas.workers import WorkerAdd, Worker
 
 
 async def add_worker(worker: WorkerAdd) -> int | None:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            insert(WorkerORM)
-            .values(**worker.model_dump())
-            .returning(WorkerORM.telegram_id)
-        )
-
-        try:
-            worker_id = (await session.execute(query)).scalar_one()
-            await session.commit()
-            return worker_id
-        except IntegrityError:
-            return None
+    return await add_to_database(
+        WorkerORM, WorkerORM.telegram_id, **worker.model_dump()
+    )
 
 
 async def get_workers() -> list[Worker]:

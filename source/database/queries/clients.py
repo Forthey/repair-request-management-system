@@ -6,27 +6,16 @@ from sqlalchemy.sql.functions import count
 from database.engine import async_session_factory
 
 from database.models.client_orm import ClientORM
+from database.queries.new import add_to_database
 from database.queries.search import search_database
 
 from schemas.clients import ClientAdd, Client
 
 
 async def add_client(client: ClientAdd) -> str | None:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            insert(ClientORM)
-            .values(**client.model_dump())
-            .returning(ClientORM.name)
-        )
-
-        try:
-            name = (await session.execute(query)).scalar_one_or_none()
-
-            await session.commit()
-            return name
-        except IntegrityError:
-            return None
+    return await add_to_database(
+        ClientORM, ClientORM.name, **client.model_dump()
+    )
 
 
 async def name_exists(name: str) -> bool:

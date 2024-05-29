@@ -4,26 +4,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session_factory
 from database.models.other_orms import CompanyPositionORM, ApplicationReasonORM, CloseReasonORM, CompanyActivityORM
+from database.queries.new import add_to_database
 from database.queries.search import search_database
 from schemas.other import ApplicationReason, CloseReason, CompanyActivity, CompanyPosition
 
 
 async def add_company_position(position: str) -> str | None:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            insert(CompanyPositionORM)
-            .values(name=position)
-            .returning(CompanyPositionORM.name)
-        )
-
-        try:
-            position = (await session.execute(query)).scalar_one_or_none()
-
-            await session.commit()
-            return position
-        except IntegrityError:
-            return None
+    return await add_to_database(
+        CompanyPositionORM, CompanyActivityORM.name, name=position
+    )
 
 
 async def find_company_position(position: str) -> bool:
@@ -81,21 +70,9 @@ async def find_app_reason(app_id: int, reason: str) -> bool:
 
 
 async def add_close_reason(reason: str) -> str | None:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            insert(CloseReasonORM)
-            .values(name=reason)
-            .returning(CloseReasonORM.name)
-        )
-
-        try:
-            reason = (await session.execute(query)).scalar_one_or_none()
-
-            await session.commit()
-            return reason
-        except IntegrityError:
-            return None
+    return await add_to_database(
+        CloseReasonORM, CloseReasonORM.name, name=reason
+    )
 
 
 async def search_close_reason(args: list[str]) -> list[CloseReason]:
@@ -116,21 +93,9 @@ async def find_close_reason(reason: str) -> bool:
 
 
 async def add_company_activity(name: str) -> str | None:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            insert(CompanyActivityORM)
-            .values(name=name)
-            .returning(CompanyActivityORM.name)
-        )
-
-        try:
-            activity = (await session.execute(query)).scalar_one_or_none()
-
-            await session.commit()
-            return activity
-        except IntegrityError:
-            return None
+    return await add_to_database(
+        CompanyActivityORM, CompanyActivityORM.name, name=name
+    )
 
 
 async def search_company_activity(args: list[str]) -> list[CompanyActivity]:

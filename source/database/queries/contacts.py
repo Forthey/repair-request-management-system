@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.engine import async_session_factory
 
 from database.models.contact_orm import ContactORM
+from database.queries.new import add_to_database
 from database.queries.search import search_database
 
 from schemas.contacts import ContactAdd, Contact
@@ -24,21 +25,9 @@ async def get_contact(contact_id: int) -> Contact | None:
 
 
 async def add_contact(contact: ContactAdd) -> int | None:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            insert(ContactORM)
-            .values(**contact.model_dump())
-            .returning(ContactORM.id)
-        )
-
-        try:
-            contact_id = (await session.execute(query)).scalar_one_or_none()
-
-            await session.commit()
-            return contact_id
-        except IntegrityError:
-            return None
+    return await add_to_database(
+        ContactORM, ContactORM.id, **contact.model_dump()
+    )
 
 
 async def search_contacts(args: list[str]) -> list[Contact]:
