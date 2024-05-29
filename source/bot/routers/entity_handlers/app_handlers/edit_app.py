@@ -55,17 +55,29 @@ states_strings: dict[str, str] = {
 }
 
 
-async def print_edit_message(message: Message):
+async def print_edit_message(message: Message, state: FSMContext):
+    data = await state.get_data()
+    app = ApplicationFull.model_validate(data)
     await message.answer(
-        "Выберите поле для изменения",
+        full_app_to_str(app),
         reply_markup=render_inline_buttons(edit_field, 2)
     )
 
 
 @router.callback_query(StateFilter(ChooseOneApplicationState.chosen_app_confirmation), F.data == "confirm_edit_app")
 async def confirm_edit_app_begin(query: CallbackQuery, state: FSMContext):
+    app_id = (await state.get_data()).get("app_id")
+    if app_id is None:
+        await query.answer("Что-то пошло не так...")
+        return
+    app = await get_application(app_id)
+    if app is None:
+        await query.answer("Что-то пошло не так...")
+        return
+    await state.update_data(app.model_dump())
+
     await state.set_state(EditApplicationState.waiting_for_click)
-    await print_edit_message(query.message)
+    await print_edit_message(query.message, state)
 
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_contact")
@@ -80,7 +92,7 @@ async def choosing_app_contact(message: Message, state: FSMContext):
         return
 
     await state.set_state(EditApplicationState.waiting_for_click)
-    await print_edit_message(message)
+    await print_edit_message(message, state)
 
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_machine")
@@ -95,7 +107,7 @@ async def choosing_app_machine(message: Message, state: FSMContext):
         return
 
     await state.set_state(EditApplicationState.waiting_for_click)
-    await print_edit_message(message)
+    await print_edit_message(message, state)
 
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_address")
@@ -110,7 +122,7 @@ async def edit_address(message: Message, state: FSMContext):
         return
 
     await state.set_state(EditApplicationState.waiting_for_click)
-    await print_edit_message(message)
+    await print_edit_message(message, state)
 
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_est_rep_date_duration")
@@ -125,7 +137,7 @@ async def writing_app_est_repair_date_and_duration(message: Message, state: FSMC
         return
 
     await state.set_state(EditApplicationState.waiting_for_click)
-    await print_edit_message(message)
+    await print_edit_message(message, state)
 
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_notes")
@@ -139,27 +151,26 @@ async def writing_app_notes(message: Message, state: FSMContext):
     await state.update_data(notes=message.text)
 
     await state.set_state(EditApplicationState.waiting_for_click)
-    await print_edit_message(message)
+    await print_edit_message(message, state)
 
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_app_confirm")
 async def edit_app_confirm(query: CallbackQuery, state: FSMContext):
     edited_data = await state.get_data()
 
-    app: ApplicationFull | None = await get_application(edited_data["app_id"])\
+    app: ApplicationFull | None = await get_application(edited_data["app_id"])
 
-    logging.info(edited_data)
     if len(edited_data) == 1:
         await query.answer("Вы не изменили ни одно поле")
         return
 
     answer_result = (
-        f"{app_to_str(app)}\n"
+        f"{full_app_to_str(ApplicationFull.model_validate(edited_data))}\n"
         f"\nИзмененные поля: \n"
     )
 
     for key in edited_data:
-        if key == "app_id":
+        if key == "app_id" or getattr(app, key) == edited_data[key] or key not in db_apps.changeable_app_field_to_str:
             continue
         answer_result += f"{db_apps.changeable_app_field_to_str[key]}: {getattr(app, key)} -> {edited_data[key]}\n"
 
@@ -174,15 +185,22 @@ async def edit_app_confirm(query: CallbackQuery, state: FSMContext):
 async def cancel_app_edit(query: CallbackQuery, state: FSMContext):
     await state.set_state(EditApplicationState.waiting_for_click)
     await query.answer("Отменено")
-    await print_edit_message(query.message)
+    await print_edit_message(query.message, state)
 
 
 @router.callback_query(StateFilter(EditApplicationState.edit_app_confirmation), F.data == "confirm_app_edit")
 async def confirm_app_edit(query: CallbackQuery, state: FSMContext):
     edited_data = await state.get_data()
     app_id = edited_data.pop("app_id")
+    app: ApplicationFull | None = await get_application(app_id)
 
-    await db_apps.update_application(app_id, **edited_data)
+    changed_fields: dict = {}
+    for key in edited_data:
+        if getattr(app, key) == edited_data[key] or key not in db_apps.changeable_app_field_to_str:
+            continue
+        changed_fields[key] = edited_data[key]
+
+    await db_apps.update_application(app_id, **changed_fields)
 
     await state.clear()
     await query.answer("Заявка изменена")
