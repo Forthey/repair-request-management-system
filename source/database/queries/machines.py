@@ -18,7 +18,7 @@ from schemas.machines import Machine
 
 async def add_machine(name: str, file_id: str | None = None) -> str | None:
     return await add_to_database(
-        MachineORM, MachineORM.name, name=name, file_id=file_id
+        MachineORM, MachineORM.name, name=name, photo_url=file_id
     )
 
 
@@ -35,5 +35,5 @@ async def find_machine(name: str) -> bool:
 
 async def search_machines(args: list[str]) -> list[Machine]:
     return await search_database(
-        MachineORM, {"name": MachineORM.name}, args, Machine, MachineORM.name
+        MachineORM, {"name": MachineORM.name}, args, Machine, [MachineORM.name]
     )

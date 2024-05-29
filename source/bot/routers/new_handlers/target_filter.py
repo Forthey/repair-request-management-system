@@ -8,5 +8,6 @@ class TargetFilter(BaseFilter):
 
     async def __call__(self, message: Message) -> bool:  # [3]
         args = message.text.split(" ")[1:]
-        if args[0].lower() in self.target_strings:
-            return True
+        if len(args) < 2 or args[0].lower() not in self.target_strings:
+            return False
+        return True
