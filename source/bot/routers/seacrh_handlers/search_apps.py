@@ -4,6 +4,7 @@ from aiogram.types import InlineQuery, InlineQueryResultArticle, InputTextMessag
 from bot.routers.seacrh_handlers.inline_target_filter import InlineTargetFilter
 from bot.target_names import all_entity_strings
 import database.queries.applications as app
+from bot.utility.pretty_date import date_to_str
 from schemas.applications import Application
 
 router = Router()
@@ -22,7 +23,7 @@ async def search_apps(inline_query: InlineQuery):
     for application in apps:
         results.append(InlineQueryResultArticle(
             id=application.id.__str__(),
-            title=f"'{application.client_name}' ({application.created_at.date()})",
+            title=f"'{application.client_name}' ({date_to_str(application.created_at)})",
             description=f"id: {application.id}; \n"
                         f"Станок: {application.machine_name if application.machine_name else "Не указан"}; \n"
                         f"Адрес: {application.address_name if application.address_name else "Не указан"}",
