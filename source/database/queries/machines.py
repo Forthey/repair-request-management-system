@@ -33,6 +33,19 @@ async def find_machine(name: str) -> bool:
         return (await session.execute(query)).scalar_one_or_none() is not None
 
 
+async def get_machine(name: str) -> Machine | None:
+    session: AsyncSession
+    async with async_session_factory() as session:
+        query = (
+            select(MachineORM)
+            .where(MachineORM.name == name)
+        )
+
+        machine_orm = (await session.execute(query)).scalar_one_or_none()
+
+        return Machine.model_validate(machine_orm, from_attributes=True) if machine_orm else None
+
+
 async def search_machines(args: list[str]) -> list[Machine]:
     return await search_database(
         MachineORM, {"name": MachineORM.name}, args, Machine, [MachineORM.name]

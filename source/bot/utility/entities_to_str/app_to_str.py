@@ -1,3 +1,4 @@
+from bot.utility.entities_to_str.address_to_str import address_to_str
 from bot.utility.entities_to_str.contact_to_str import contact_to_str
 from database.queries.contacts import get_contact
 from schemas.applications import ApplicationFull, Application, ApplicationWithReasons
@@ -14,7 +15,7 @@ def full_app_to_str(app: ApplicationFull):
     if app.contact_id is None:
         result += "Контакт: не указан\n"
     else:
-        result += f"Контакт:\n {contact_to_str(app.contact)}"
+        result += f"Контакт:\n{contact_to_str(app.contact)}"
 
     if app.machine_name is None:
         result += "Станок: Не указан\n"
@@ -24,11 +25,7 @@ def full_app_to_str(app: ApplicationFull):
     if app.address_name is None:
         result += "Адрес: не указан\n"
     else:
-        result += (
-            f"Адрес: {app.address_name}\n"
-            f"    Часы работы: {app.address.workhours if app.address.workhours else "Не указаны"}\n"
-            f"    Заметки: {app.address.notes if app.address.notes else "Нету"}\n"
-        )
+        result += f"Адрес:\n{address_to_str(app.address)}"
 
     result += (
         f"Примерная дата ремонта: {

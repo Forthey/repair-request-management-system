@@ -67,6 +67,7 @@ async def parse_app_contact(message: Message, state: FSMContext) -> bool:
             await message.answer(f"Контакт {contact_id} не относится к клиенту \"{client_name}\", добавленному ранее")
             return False
 
+    await state.update_data(contact=(await db_contacts.get_contact(contact_id)))
     await state.update_data(contact_id=contact_id)
     return True
 
@@ -93,6 +94,7 @@ async def parse_app_machine(message: Message, state: FSMContext) -> bool:
         await message.answer("Такого станка не существует")
         return False
 
+    await state.update_data(machine=db_machines.get_machine(machine))
     await state.update_data(machine_name=machine)
     return True
 
@@ -123,6 +125,7 @@ async def parse_app_address(message: Message, state: FSMContext) -> bool:
                 await message.answer("Такого адреса у клиента не существует")
                 return False
 
+    await state.update_data(address=(await db_addresses.get_address(client_name, address)))
     await state.update_data(address_name=address)
     return True
 
