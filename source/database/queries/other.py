@@ -11,7 +11,7 @@ from schemas.other import ApplicationReason, CloseReason, CompanyActivity, Compa
 
 async def add_company_position(position: str) -> str | None:
     return await add_to_database(
-        CompanyPositionORM, CompanyActivityORM.name, name=position
+        CompanyPositionORM, CompanyPositionORM.name, name=position
     )
 
 
