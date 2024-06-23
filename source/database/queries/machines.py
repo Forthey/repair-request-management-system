@@ -1,15 +1,11 @@
-import io
-
-from sqlalchemy import insert, update, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session_factory
 
 from database.models.machine_orm import MachineORM
 
-from database.queries.new import add_to_database
-from database.queries.search import search_database
+from database.queries.raw import Database
 
 from schemas.machines import Machine
 
@@ -17,20 +13,13 @@ from schemas.machines import Machine
 
 
 async def add_machine(name: str, file_id: str | None = None) -> str | None:
-    return await add_to_database(
+    return await Database.add(
         MachineORM, MachineORM.name, name=name, photo_url=file_id
     )
 
 
 async def find_machine(name: str) -> bool:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            select(MachineORM)
-            .where(MachineORM.name == name)
-        )
-
-        return (await session.execute(query)).scalar_one_or_none() is not None
+    return await Database.find(MachineORM, name=name)
 
 
 async def get_machine(name: str) -> Machine | None:
@@ -47,6 +36,6 @@ async def get_machine(name: str) -> Machine | None:
 
 
 async def search_machines(args: list[str]) -> list[Machine]:
-    return await search_database(
-        MachineORM, {"name": MachineORM.name}, args, Machine, [MachineORM.name]
+    return await Database.search(
+        MachineORM, Machine, {"name": MachineORM.name}, args, [MachineORM.name]
     )

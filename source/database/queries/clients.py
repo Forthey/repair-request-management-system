@@ -1,35 +1,27 @@
-from sqlalchemy import exists, select, insert
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.functions import count
 
 from database.engine import async_session_factory
 
 from database.models.client_orm import ClientORM
-from database.queries.new import add_to_database
-from database.queries.search import search_database
+
+from database.queries.raw import Database
 
 from schemas.clients import ClientAdd, Client
 
 
 async def add_client(client: ClientAdd) -> str | None:
-    return await add_to_database(
+    return await Database.add(
         ClientORM, ClientORM.name, **client.model_dump()
     )
 
 
-async def name_exists(name: str) -> bool:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            select(count())
-            .where(ClientORM.name == name)
-        )
-
-        return (await session.execute(query)).scalar_one() == 1
+async def find_client(name: str) -> bool:
+    return await Database.find(ClientORM, name=name)
 
 
 async def search_clients(args: list[str]) -> list[Client]:
-    return await search_database(
-        ClientORM, {"name": ClientORM.name}, args, Client, [ClientORM.name]
+    return await Database.search(
+        ClientORM, Client, {"name": ClientORM.name}, args, [ClientORM.name]
     )

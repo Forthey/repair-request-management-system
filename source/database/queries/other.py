@@ -4,31 +4,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session_factory
 from database.models.other_orms import CompanyPositionORM, ApplicationReasonORM, CloseReasonORM, CompanyActivityORM
-from database.queries.new import add_to_database
-from database.queries.search import search_database
-from schemas.other import ApplicationReason, CloseReason, CompanyActivity, CompanyPosition
+
+from database.queries.raw import Database
+
+from schemas.other import CloseReason, CompanyActivity, CompanyPosition
 
 
 async def add_company_position(position: str) -> str | None:
-    return await add_to_database(
+    return await Database.add(
         CompanyPositionORM, CompanyPositionORM.name, name=position
     )
 
 
 async def find_company_position(position: str) -> bool:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            select(CompanyPositionORM)
-            .where(CompanyPositionORM.name == position)
-        )
-
-        return (await session.execute(query)).scalar_one_or_none() is not None
+    return await Database.find(CompanyPositionORM, name=position)
 
 
 async def search_company_position(args: list[str]) -> list[CompanyPosition]:
-    return await search_database(
-        CompanyPositionORM, {"name": CompanyPositionORM.name}, args, CompanyPosition, [CompanyPositionORM.name]
+    return await Database.search(
+        CompanyPositionORM, CompanyPosition, {"name": CompanyPositionORM.name}, args, [CompanyPositionORM.name]
     )
 
 
@@ -54,51 +48,32 @@ async def add_app_reason(app_id: int, reason: str) -> str | None:
 
 
 async def find_app_reason(app_id: int, reason: str) -> bool:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            select(ApplicationReasonORM)
-            .where(
-                and_(
-                    ApplicationReasonORM.application_id == app_id,
-                    ApplicationReasonORM.reason_name == reason
-                )
-            )
-        )
-
-        return (await session.execute(query)).scalar_one_or_none() is not None
+    return await Database.find(ApplicationReasonORM, application_id=app_id, reason_name=reason)
 
 
 async def add_close_reason(reason: str) -> str | None:
-    return await add_to_database(
+    return await Database.add(
         CloseReasonORM, CloseReasonORM.name, name=reason
     )
 
 
 async def search_close_reason(args: list[str]) -> list[CloseReason]:
-    return await search_database(
-        CloseReasonORM, {"name": CloseReasonORM.name}, args, CloseReason, [CloseReasonORM.name]
+    return await Database.search(
+        CloseReasonORM, CloseReason, {"name": CloseReasonORM.name}, args, [CloseReasonORM.name]
     )
 
 
 async def find_close_reason(reason: str) -> bool:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            select(CloseReasonORM)
-            .where(CloseReasonORM.name == reason)
-        )
-
-        return (await session.execute(query)).scalar_one_or_none() is not None
+    return await Database.find(CloseReasonORM, name=reason)
 
 
 async def add_company_activity(name: str) -> str | None:
-    return await add_to_database(
+    return await Database.add(
         CompanyActivityORM, CompanyActivityORM.name, name=name
     )
 
 
 async def search_company_activity(args: list[str]) -> list[CompanyActivity]:
-    return await search_database(
-        CompanyActivityORM, {"name": CompanyActivityORM.name}, args, CompanyActivity, [CompanyActivityORM.name]
+    return await Database.search(
+        CompanyActivityORM, CompanyActivity, {"name": CompanyActivityORM.name}, args, [CompanyActivityORM.name]
     )

@@ -2,19 +2,16 @@ import datetime
 
 from sqlalchemy import insert, select, or_, update
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.functions import count
 
 from database.engine import async_session_factory
 
 from database.models.application_orm import ApplicationORM, ApplicationChangeLogORM
 from database.models.other_orms import ApplicationReasonORM
-from database.queries.search import search_database
+from database.queries.raw import Database
 
 from schemas.applications import ApplicationAdd, Application, ApplicationFull, ApplicationWithReasons, \
     ApplicationChangeLog
-
 
 changeable_app_field_to_str = {
     "est_repair_date": "Примерная дата ремонта",
@@ -28,7 +25,6 @@ changeable_app_field_to_str = {
 
 
 async def count_worker_applications(telegram_id: int) -> int:
-    session: AsyncSession
     async with async_session_factory() as session:
         query = (
             select(count())
@@ -45,65 +41,43 @@ async def count_worker_applications(telegram_id: int) -> int:
 
 
 async def get_applications(offset: int = 0, limit: int = 3, **params) -> list[ApplicationWithReasons]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            select(ApplicationORM)
-            .options(selectinload(ApplicationORM.reasons))
-            .order_by(ApplicationORM.closed_at.desc(), ApplicationORM.created_at.desc())
-            .offset(offset)
-            .limit(limit)
-        )
+    filters: dict = {}
+    if "client_name" in params:
+        filters["client_name"] = params["client_name"]
+    if "worker_id" in params:
+        filters["worker_id"] = params["worker_id"]
+        filters["editor_id"] = params["worker_id"]
 
-        if "client_name" in params:
-            query = query.where(ApplicationORM.client_name == params["client_name"])
-        if "worker_id" in params:
-            query = query.where(
-                or_(
-                    ApplicationORM.repairer_id == params["worker_id"],
-                    ApplicationORM.editor_id == params["worker_id"]
-                )
-            )
-
-        apps_orm = (await session.execute(query)).scalars().all()
-
-        return [ApplicationWithReasons.model_validate(app, from_attributes=True) for app in apps_orm]
+    return await Database.get(
+        ApplicationORM, Application,
+        [ApplicationORM.closed_at.desc(), ApplicationORM.created_at.desc()],
+        offset, limit,
+        [ApplicationORM.reasons],
+        **filters
+    )
 
 
 async def get_application(app_id: int) -> ApplicationFull | None:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            select(ApplicationORM)
-            .where(ApplicationORM.id == app_id)
-            .options(
-                selectinload(ApplicationORM.reasons),
-                selectinload(ApplicationORM.contact),
-                selectinload(ApplicationORM.machine),
-                selectinload(ApplicationORM.address)
-            )
-        )
-
-        app_orm = (await session.execute(query)).scalar_one_or_none()
-
-        return ApplicationFull.model_validate(app_orm, from_attributes=True) if app_orm else None
+    return await Database.get_one(
+        ApplicationORM, Application,
+        [ApplicationORM.reasons, ApplicationORM.contact, ApplicationORM.machine, ApplicationORM.address],
+        id=app_id
+    )
 
 
 async def search_applications(args: list[str]) -> list[Application]:
-    return await search_database(
-        ApplicationORM,
+    return await Database.search(
+        ApplicationORM, Application,
         {
             "client_name": ApplicationORM.client_name,
             "machine_name": ApplicationORM.machine_name,
             "address_name": ApplicationORM.address_name
-        },
-        args, Application,
+        }, args,
         [ApplicationORM.closed_at.desc()],
     )
 
 
 async def add_application(application: ApplicationAdd, app_reasons: list[str]) -> int | None:
-    session: AsyncSession
     async with async_session_factory() as session:
         query = (
             insert(ApplicationORM)
@@ -124,7 +98,6 @@ async def add_application(application: ApplicationAdd, app_reasons: list[str]) -
 
 
 async def update_application(app_id: int, **fields):
-    session: AsyncSession
     async with async_session_factory() as session:
         query = (
             select(ApplicationORM)
@@ -154,7 +127,6 @@ async def update_application(app_id: int, **fields):
 
 
 async def take_application(app_id: int, repairer_id: int) -> bool:
-    session: AsyncSession
     async with async_session_factory() as session:
         query = (
             update(ApplicationORM)
@@ -185,7 +157,6 @@ async def take_application(app_id: int, repairer_id: int) -> bool:
 
 
 async def close_application(app_id: int, reason: str) -> bool:
-    session: AsyncSession
     async with async_session_factory() as session:
         close_date = datetime.datetime.now(datetime.UTC)
         query = (
@@ -220,31 +191,12 @@ async def close_application(app_id: int, reason: str) -> bool:
 
 
 async def add_application_log(app_id: int, field_name: str, old_value: str, new_value: str | None):
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            insert(ApplicationChangeLogORM)
-            .values(
-                application_id=app_id,
-                field_name=field_name,
-                old_value=old_value,
-                new_value=new_value
-            )
-        )
-
-        await session.execute(query)
-
-        await session.commit()
+    await Database.add(ApplicationChangeLogORM,
+                       application_id=app_id,
+                       field_name=field_name,
+                       old_value=old_value,
+                       new_value=new_value)
 
 
 async def get_application_logs(app_id: int) -> list[ApplicationChangeLog]:
-    session: AsyncSession
-    async with async_session_factory() as session:
-        query = (
-            select(ApplicationChangeLogORM)
-            .where(ApplicationChangeLogORM.application_id == app_id)
-        )
-
-        change_logs_orm = (await session.execute(query)).scalars().all()
-
-        return [ApplicationChangeLog.model_validate(change_log, from_attributes=True) for change_log in change_logs_orm]
+    return await Database.get(ApplicationChangeLogORM, ApplicationChangeLog, application_id=app_id)

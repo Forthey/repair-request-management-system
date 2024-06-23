@@ -1,18 +1,15 @@
-from sqlalchemy import select, update, delete, insert, or_, and_
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select, update
 
 from database.engine import async_session_factory, AsyncSession
 
-from database.models.application_orm import ApplicationORM
 from database.models.worker_orm import WorkerORM
-from database.queries.new import add_to_database
-from database.queries.search import search_database
+from database.queries.raw import Database
 
 from schemas.workers import WorkerAdd, Worker
 
 
 async def add_worker(worker: WorkerAdd) -> int | None:
-    return await add_to_database(
+    return await Database.add(
         WorkerORM, WorkerORM.telegram_id, **worker.model_dump()
     )
 
@@ -31,13 +28,14 @@ async def get_workers() -> list[Worker]:
 
 
 async def search_workers(args: list[str]) -> list[Worker]:
-    return await search_database(
-        WorkerORM, {
+    return await Database.search(
+        WorkerORM,  Worker,
+        {
             "surname": WorkerORM.surname,
             "name": WorkerORM.name,
             "patronymic": WorkerORM.patronymic,
             "access_right": WorkerORM.access_right
-        }, args, Worker,
+        }, args,
         [WorkerORM.surname, WorkerORM.name, WorkerORM.patronymic],
         active=True
     )

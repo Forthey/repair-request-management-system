@@ -3,6 +3,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from bot.routers.utility_commands.back import back
 from bot.utility.render_buttons import render_keyboard_buttons
 
 from bot.auth_filter import AuthFilter
@@ -39,7 +40,8 @@ async def print_help(message: Message):
 
 
 @router.message(F.text.lower() == "отмена")
-async def cancel(message: Message, state: FSMContext):
+@router.message(Command("cancel"))
+async def cancel_command(message: Message, state: FSMContext):
     state_str = await state.get_state()
 
     if state_str is None:
@@ -55,6 +57,12 @@ async def cancel(message: Message, state: FSMContext):
         text="Отменено",
         reply_markup=render_keyboard_buttons(base_commands, 2)
     )
+
+
+@router.message(Command("back"))
+async def back_command(message: Message, state: FSMContext):
+    await back(state)
+    await message.answer("Отменено")
 
 
 @router.message(F.text == "$skip")

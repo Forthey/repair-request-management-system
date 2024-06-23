@@ -8,12 +8,13 @@ from aiogram.types import Message, ReplyKeyboardMarkup, CallbackQuery, \
     InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from bot.routers.utility_commands.back import back
 from bot.states.machine import MachineState
 
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 from bot.commands import base_commands
 
-from database.queries.machines import add_machine
+import database.queries.machines as db_machines
 
 
 router = Router()
@@ -25,7 +26,7 @@ commands = [
 
 
 @router.message(StateFilter(None), F.text == "Добавить станок")
-async def add_begin(message: Message, state: FSMContext):
+async def add_machine(message: Message, state: FSMContext):
 
     await message.answer(
         text=f"*Создание нового станка*",
@@ -48,18 +49,16 @@ async def add_name_with_photo(message: Message, state: FSMContext, bot):
     file_id = message.photo[0].file_id
     # file_info = await bot.get_file(file_id)
     # downloaded_file = await bot.download_file(file_info.file_path)
-    if not await add_machine(name, file_id):
+    if not await db_machines.add_machine(name, file_id):
         await message.answer(
             text="Такой станок уже существует"
         )
         return
-    else:
-        await message.answer(
-            text="Станок добавлен",
-            reply_markup=render_keyboard_buttons(base_commands, 2)
-        )
-
-    await state.clear()
+    await back(state)
+    await message.answer(
+        text="Станок добавлен",
+        reply_markup=render_keyboard_buttons(base_commands, 2)
+    )
 
 
 @router.message(StateFilter(MachineState.writing_machine_name), F.text)
@@ -69,13 +68,15 @@ async def add_name_without_photo(message: Message, state: FSMContext):
         await message.answer("Имя станка слишком короткое")
         return
 
-    if not await add_machine(name):
+    if not await db_machines.add_machine(name):
         await message.answer("Такой станок уже существует")
         return
-    else:
+    if not await back(state):
         await message.answer(
             text="Станок добавлен",
             reply_markup=render_keyboard_buttons(base_commands, 2)
         )
-
-    await state.clear()
+    else:
+        await message.answer(
+            text="Станок добавлен"
+        )

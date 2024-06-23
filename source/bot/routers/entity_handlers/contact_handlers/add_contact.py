@@ -7,6 +7,7 @@ from aiogram.types import Message, CallbackQuery
 from pydantic import ValidationError
 
 from bot.commands import base_commands
+from bot.routers.utility_commands.back import back
 from bot.states.contact import ContactState
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 import database.queries.contacts as db_contacts
@@ -92,7 +93,7 @@ async def add_contact_client_name(message: Message, state: FSMContext):
         return
 
     client_name = message.text
-    if not await db_clients.name_exists(client_name):
+    if not await db_clients.find_client(client_name):
         await message.answer(
             f"Клиента '{client_name}' не существует\n"
             f"{states_strings[ContactState.writing_contact_client_name]}"
@@ -234,8 +235,8 @@ async def add_contact_confirmation(callback_query: CallbackQuery, state: FSMCont
         return
 
     await callback_query.answer("Контакт добавлен")
-    await callback_query.message.answer(
-        "Выберите действие",
-        reply_markup=render_keyboard_buttons(base_commands, 2)
-    )
-    await state.clear()
+    if not await back(state):
+        await callback_query.message.answer(
+            "Выберите действие",
+            reply_markup=render_keyboard_buttons(base_commands, 2)
+        )

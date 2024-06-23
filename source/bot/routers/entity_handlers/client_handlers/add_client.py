@@ -5,6 +5,7 @@ from aiogram.types import Message, CallbackQuery
 from pydantic import ValidationError
 
 from bot.commands import base_commands
+from bot.routers.utility_commands.back import back
 from bot.states.client import ClientState
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 import database.queries.clients as db_clients
@@ -52,7 +53,7 @@ async def add_client_name(message: Message, state: FSMContext):
         return
 
     name = message.text
-    if await db_clients.name_exists(name):
+    if await db_clients.find_client(name):
         await message.answer("Такой клиент уже существует")
         return
 
@@ -74,7 +75,7 @@ async def choose_main_client(message: Message, state: FSMContext):
         return
 
     main_client_name = message.text
-    if not db_clients.name_exists(main_client_name):
+    if not db_clients.find_client(main_client_name):
         await message.answer("Такого клиента не существует")
         return
 
@@ -103,11 +104,6 @@ async def choose_activity(message: Message, state: FSMContext):
     try:
         client = ClientAdd.model_validate(client_data, from_attributes=True)
     except ValidationError as e:
-        # for error in e.errors():
-        #     error_msg = error["msg"]
-        #     L = [m[0][1:-1] for m in re.finditer("'[^']*'", error_msg)]
-        #     error["msg"] = L
-        # print(e.json())
         await message.answer("Есть незаполненные обязательные поля")
         return
 
@@ -137,8 +133,9 @@ async def add_client_confirmation(callback: CallbackQuery, state: FSMContext):
     await db_clients.add_client(client)
 
     await callback.answer("Клиент добавлен")
-    await callback.message.answer(
-        text="Выберите действие",
-        reply_markup=render_keyboard_buttons(base_commands, 2)
-    )
-    await state.clear()
+    if not await back(state):
+        await callback.message.answer(
+            "Выберите действие",
+            reply_markup=render_keyboard_buttons(base_commands, 2)
+        )
+

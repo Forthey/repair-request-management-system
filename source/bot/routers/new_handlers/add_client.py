@@ -15,7 +15,7 @@ router.message.filter(
 
 # Message handler
 @router.message()
-async def parseNewRequest(message: Message):
+async def parse_new_request(message: Message):
     new_client = " ".join(message.text.split()[2:])
     client = await add_client(ClientAdd(name=new_client))
     if client:

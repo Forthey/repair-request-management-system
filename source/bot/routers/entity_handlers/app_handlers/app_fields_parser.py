@@ -16,7 +16,7 @@ from schemas.contacts import ContactAdd
 
 async def parse_app_client_name(message: Message, state: FSMContext) -> bool:
     client_name = message.text
-    if not await db_clients.name_exists(client_name):
+    if not await db_clients.find_client(client_name):
         await message.answer(f"Клиента {client_name} не существует")
         return False
 
@@ -60,7 +60,7 @@ async def parse_app_contact(message: Message, state: FSMContext) -> bool:
         except ValueError:
             await message.answer("Указан не id")
             return False
-        if not await db_contacts.contact_exists(int(contact_id)):
+        if not await db_contacts.find_contact(int(contact_id)):
             await message.answer("Контакта с таким id не существует")
             return False
         if client_name is not None and not await db_contacts.contact_belongs_to_client(client_name, contact_id):
