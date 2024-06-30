@@ -33,6 +33,8 @@ async def main():
         BotCommand(command="/help", description="Вывести подсказки"),
         BotCommand(command="/new", description="Добавление новой сущности"),
         BotCommand(command="/get_apps", description="Просмотреть заявки"),
+        BotCommand(command="/cancel", description="Отменить всё и вернутся в главное меню"),
+        BotCommand(command="/back", description="Вернутся назад после команды /new и тп")
     ]
     await bot.set_my_commands(bot_commands)
     await bot.delete_webhook(drop_pending_updates=True)
