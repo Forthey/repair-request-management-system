@@ -20,8 +20,7 @@ class WorkerORM(Base):
 
     access_right: Mapped[str]
 
-    active: Mapped[bool]
-    # active: Mapped[bool] = mapped_column(default=True)
+    active: Mapped[bool] = mapped_column(server_default=text("true"))
 
     # Relationships
 
