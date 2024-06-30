@@ -32,6 +32,11 @@ button_data_to_function = {
 @router.message(F.text == "/new")
 async def show_new_command_menu(message: Message, state: FSMContext):
     data = await state.get_data()
+
+    if data.get("__old_data") or data.get("__old_state"):
+        await message.answer("Нельзя использовать команду /new здесь")
+        return
+
     current_state = await state.get_state()
     await state.clear()
 
