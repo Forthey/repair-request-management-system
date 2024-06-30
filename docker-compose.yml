@@ -30,7 +30,9 @@ services:
   tgbot:
     container_name: tgbot
     restart: always
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfiles/tgbot/Dockerfile
     depends_on:
       postgres:
         condition: service_healthy
@@ -39,6 +41,27 @@ services:
     volumes:
       - ./logs:/server/logs
 
+  alembic_revisions:
+    container_name: alembic_revisions
+    restart: no
+    build:
+      context: .
+      dockerfile: dockerfiles/alembic_revisions/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./source/database/migrations:/server/source/database/migrations
+
+  alembic_upgrade:
+    container_name: alembic_upgrade
+    restart: no
+    build:
+      context: .
+      dockerfile: dockerfiles/alembic_upgrade/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   pg_data:

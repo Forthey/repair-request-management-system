@@ -17,4 +17,4 @@ COPY ../.. .
 
 WORKDIR /server/source
 #CMD while true; do echo "hello"; sleep 2; done
-CMD alembic -c ../alembic.ini upgrade head && python -u main.py
+CMD alembic -c ../alembic.ini revision --autogenerate
