@@ -56,8 +56,11 @@ async def writing_address(message: Message, state: FSMContext):
         return
 
     address = message.text
-    if await db_addresses.find_address(address):
-        await message.answer("Такой адрес уже существует")
+    client: str | None = (await state.get_data()).get("client_name")
+    if await db_addresses.find_address(client, address):
+        await message.answer(
+            "Такой адрес уже существует, попробуйте сначала указать клиента, если хотите указать его адрес"
+        )
         return
 
     await state.update_data(name=address)
@@ -78,10 +81,17 @@ async def choosing_client(message: Message, state: FSMContext):
         await message.answer(states_strings[AddressState.writing_address])
         return
 
+    address: str | None = (await state.get_data()).get("name")
     client_name = message.text
     if not await db_clients.find_client(client_name):
         await message.answer("Такого клиента не существует")
         return
+    if address:
+        if await db_addresses.find_address(client_name, address):
+            await message.answer(
+                f"Адрес '{address}' у клиента '{client_name}' уже существует"
+            )
+            return
 
     await state.update_data(client_name=client_name)
 
@@ -89,17 +99,25 @@ async def choosing_client(message: Message, state: FSMContext):
     await message.answer(states_strings[AddressState.choosing_photo])
 
 
-@router.message(StateFilter(AddressState.choosing_photo), F.photo)
-async def choosing_photo(message: Message, state: FSMContext):
+@router.message(StateFilter(AddressState.choosing_photo), F.text)
+async def skip_choosing_photo(message: Message, state: FSMContext):
     if message.text == "Назад":
         await state.set_state(AddressState.choosing_client)
         await message.answer(states_strings[AddressState.choosing_client])
         return
 
-    if message.text != "Далее":
-        file_id = message.photo[0].file_id
-        await state.update_data(photo_url=file_id)
+    if message.text == "Далее":
+        await state.set_state(AddressState.writing_workhours)
+        await message.answer(states_strings[AddressState.writing_workhours])
+        return
 
+    await message.answer("Пожалуйста, выберите фото адреса, либо пропустите этот пункт командами 'Назад' и 'Далее'")
+
+
+@router.message(StateFilter(AddressState.choosing_photo), F.photo)
+async def choosing_photo(message: Message, state: FSMContext):
+    file_id = message.photo[0].file_id
+    await state.update_data(photo_url=file_id)
     await state.set_state(AddressState.writing_workhours)
     await message.answer(states_strings[AddressState.writing_workhours])
 

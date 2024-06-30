@@ -3,7 +3,7 @@ from database.queries.raw import Database
 from schemas.addresses import AddressAdd, Address
 
 
-async def get_address(client_name: str, address_name: str) -> Address | None:
+async def get_address(client_name: str | None, address_name: str) -> Address | None:
     return await Database.get_one(AddressORM, Address, client_name=client_name, name=address_name)
 
 
@@ -13,8 +13,8 @@ async def add_address(address: AddressAdd) -> str | None:
     )
 
 
-async def find_address(address: str) -> bool:
-    return await Database.find(AddressORM, name=address)
+async def find_address(client_name: str | None, address: str) -> bool:
+    return await Database.find(AddressORM, client_name=client_name, name=address)
 
 
 async def search_addresses(args: list[str]) -> list[Address]:
