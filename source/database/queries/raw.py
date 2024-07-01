@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlalchemy import select, UnaryExpression, insert, or_
+from sqlalchemy import select, UnaryExpression, insert, or_, delete
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, QueryableAttribute, selectinload
 
@@ -130,3 +130,34 @@ class Database:
             )
 
             return (await session.execute(query)).scalar_one()
+
+    @staticmethod
+    async def check_if_safe_to_delete(key_value, *references: Mapped) -> bool:
+        async with async_session_factory() as session:
+            for reference in references:
+                query = (
+                    select(reference)
+                    .where(reference == key_value)
+                )
+                result = (await session.execute(query)).scalars().all()
+                if result:
+                    return False
+
+            return True
+
+    @staticmethod
+    async def delete[Table, KeyRowType](table: type(Table), key_row: Mapped, key_value: KeyRowType) -> KeyRowType | None:
+        async with async_session_factory() as session:
+            query = (
+                delete(table)
+                .where(key_row == key_value)
+                .returning(key_row)
+            )
+
+            try:
+                key_value = (await session.execute(query)).scalar_one()
+
+                await session.commit()
+                return key_value
+            except Exception as e:
+                return None

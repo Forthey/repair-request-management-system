@@ -2,6 +2,7 @@ from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session_factory
+from database.models.application_orm import ApplicationORM
 
 from database.models.contact_orm import ContactORM
 
@@ -69,3 +70,14 @@ async def contact_belongs_to_client(client_name: str, contact_id: int) -> bool:
     if contact is None:
         return False
     return contact.client_name == client_name or contact.client_name is None
+
+
+async def check_if_contact_safe_to_delete(contact_id: int) -> bool:
+    return await Database.check_if_safe_to_delete(
+        contact_id,
+        ApplicationORM.contact_id,
+    )
+
+
+async def delete_contact(contact_id: int) -> int:
+    return await Database.delete(ContactORM, ContactORM.id, contact_id)

@@ -3,6 +3,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session_factory
+from database.models.application_orm import ApplicationORM
+from database.models.client_orm import ClientORM
+from database.models.contact_orm import ContactORM
 from database.models.other_orms import CompanyPositionORM, ApplicationReasonORM, CloseReasonORM, CompanyActivityORM
 
 from database.queries.raw import Database
@@ -24,6 +27,17 @@ async def search_company_position(args: list[str]) -> list[CompanyPosition]:
     return await Database.search(
         CompanyPositionORM, CompanyPosition, {"name": CompanyPositionORM.name}, args, [CompanyPositionORM.name]
     )
+
+
+async def check_if_company_position_safe_to_delete(position: str) -> bool:
+    return await Database.check_if_safe_to_delete(
+        position,
+        ContactORM.company_position,
+    )
+
+
+async def delete_company_position(position: str) -> str:
+    return await Database.delete(CompanyPositionORM, CompanyPositionORM.name, position)
 
 
 async def add_app_reason(app_id: int, reason: str) -> str | None:
@@ -67,9 +81,20 @@ async def find_close_reason(reason: str) -> bool:
     return await Database.find(CloseReasonORM, name=reason)
 
 
-async def add_company_activity(name: str) -> str | None:
+async def check_if_close_reason_safe_to_delete(reason: str) -> bool:
+    return await Database.check_if_safe_to_delete(
+        reason,
+        ApplicationORM.close_reason,
+    )
+
+
+async def delete_close_reason(reason: str) -> str:
+    return await Database.delete(CloseReasonORM, CloseReasonORM.name, reason)
+
+
+async def add_company_activity(activity: str) -> str | None:
     return await Database.add(
-        CompanyActivityORM, CompanyActivityORM.name, name=name
+        CompanyActivityORM, CompanyActivityORM.name, name=activity
     )
 
 
@@ -77,3 +102,14 @@ async def search_company_activity(args: list[str]) -> list[CompanyActivity]:
     return await Database.search(
         CompanyActivityORM, CompanyActivity, {"name": CompanyActivityORM.name}, args, [CompanyActivityORM.name]
     )
+
+
+async def check_if_company_activity_safe_to_delete(activity: str) -> bool:
+    return await Database.check_if_safe_to_delete(
+        activity,
+        ClientORM.activity,
+    )
+
+
+async def delete_company_activity(activity: str) -> str:
+    return await Database.delete(CompanyActivityORM, CompanyActivityORM.name, activity)

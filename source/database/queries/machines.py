@@ -2,6 +2,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.engine import async_session_factory
+from database.models.application_orm import ApplicationORM
 
 from database.models.machine_orm import MachineORM
 
@@ -39,3 +40,14 @@ async def search_machines(args: list[str]) -> list[Machine]:
     return await Database.search(
         MachineORM, Machine, {"name": MachineORM.name}, args, [MachineORM.name]
     )
+
+
+async def check_if_machine_safe_to_delete(machine_name: str) -> bool:
+    return await Database.check_if_safe_to_delete(
+        machine_name,
+        ApplicationORM.machine_name,
+    )
+
+
+async def delete_machine(machine_name: str) -> str:
+    return await Database.delete(MachineORM, MachineORM.name, machine_name)
