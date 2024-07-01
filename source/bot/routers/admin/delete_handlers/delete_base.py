@@ -20,10 +20,10 @@ buttons = [
 
 deletable_entities = {
     "delete_client": "Клиент",
-    "delete_address": "Адрес",
-    "delete_contact": "Контакт",
-    "delete_machine": "Станок",
-    "delete_other": "Другое"
+    # "delete_address": "Адрес",
+    # "delete_contact": "Контакт",
+    # "delete_machine": "Станок",
+    # "delete_other": "Другое"
 }
 
 
