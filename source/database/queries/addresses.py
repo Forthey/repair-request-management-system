@@ -23,7 +23,11 @@ async def find_address(client_name: str | None, address_name: str) -> bool:
 
 async def search_addresses(args: list[str]) -> list[Address]:
     return await Database.search(
-        AddressORM, Address, {"name": AddressORM.name}, args, [AddressORM.name]
+        AddressORM, Address,
+        {
+            "name": AddressORM.name, "client_name": AddressORM.client_name
+        }, args,
+        [AddressORM.client_name, AddressORM.name]
     )
 
 
