@@ -21,7 +21,7 @@ from bot.routers.entity_handlers.address_handlers import address_base
 
 from bot.routers.admin import admin_base
 # Commands
-from bot.commands import base_commands, admin_base_commands
+from bot.commands import base_commands
 
 
 router = Router()

@@ -4,6 +4,7 @@ from aiogram.types import Message
 
 from bot.routers.admin.admin_filter import AdminFilter
 from bot.routers.admin.worker_handlers import workers_base
+from bot.routers.admin.delete_handlers import delete_base
 from bot.commands import admin_base_commands
 from bot.utility.render_buttons import render_keyboard_buttons
 
@@ -11,7 +12,8 @@ router = Router()
 router.message.filter(AdminFilter())
 
 router.include_routers(
-    workers_base.router
+    workers_base.router,
+    delete_base.router
 )
 
 

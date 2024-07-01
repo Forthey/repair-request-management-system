@@ -8,7 +8,8 @@ base_commands = [
 ]
 
 admin_base_commands = [
-    "Работники"
+    "Работники",
+    "Удалить объект"
 ]
 
 app_commands = [
