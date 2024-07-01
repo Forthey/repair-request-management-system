@@ -42,24 +42,28 @@ async def count_worker_applications(telegram_id: int) -> int:
 
 async def get_applications(offset: int = 0, limit: int = 3, **params) -> list[ApplicationWithReasons]:
     filters: dict = {}
+    where_clause = or_()
     if "client_name" in params:
         filters["client_name"] = params["client_name"]
     if "worker_id" in params:
-        filters["worker_id"] = params["worker_id"]
-        filters["editor_id"] = params["worker_id"]
+        where_clause = or_(
+            ApplicationORM.repairer_id == params["worker_id"],
+            ApplicationORM.editor_id == params["worker_id"]
+        )
 
     return await Database.get(
-        ApplicationORM, Application,
+        ApplicationORM, ApplicationWithReasons,
         [ApplicationORM.closed_at.desc(), ApplicationORM.created_at.desc()],
         offset, limit,
         [ApplicationORM.reasons],
+        where_clause,
         **filters
     )
 
 
 async def get_application(app_id: int) -> ApplicationFull | None:
     return await Database.get_one(
-        ApplicationORM, Application,
+        ApplicationORM, ApplicationFull,
         [ApplicationORM.reasons, ApplicationORM.contact, ApplicationORM.machine, ApplicationORM.address],
         id=app_id
     )

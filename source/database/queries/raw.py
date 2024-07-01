@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlalchemy import select, UnaryExpression, insert, or_, delete
+from sqlalchemy import select, UnaryExpression, insert, or_, delete, ColumnElement
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, QueryableAttribute, selectinload
 
@@ -32,6 +32,7 @@ class Database:
             ordering: list[UnaryExpression] | None = None,
             offset: int | None = None, limit: int | None = None,
             join: list[QueryableAttribute] | None = None,
+            where_clause: ColumnElement[bool] | None = None,
             **filters,
     ) -> list[Schema]:
         async with async_session_factory() as session:
@@ -39,6 +40,8 @@ class Database:
                 select(table)
                 .filter_by(**filters)
             )
+            if where_clause is not None:
+                query = query.where(where_clause)
             if join:
                 query = query.options(*map(lambda join_el: selectinload(join_el), join))
             if ordering:
@@ -48,7 +51,7 @@ class Database:
             if limit:
                 query = query.limit(limit)
 
-            result_orm = (await session.execute(query)).scalar_one_or_none()
+            result_orm = (await session.execute(query)).scalars().all()
 
             return [schema.model_validate(res, from_attributes=True) for res in result_orm]
 
@@ -146,7 +149,8 @@ class Database:
             return True
 
     @staticmethod
-    async def delete[Table, KeyRowType](table: type(Table), key_row: Mapped, key_value: KeyRowType) -> KeyRowType | None:
+    async def delete[Table, KeyRowType](table: type(Table), key_row: Mapped,
+                                        key_value: KeyRowType) -> KeyRowType | None:
         async with async_session_factory() as session:
             query = (
                 delete(table)
