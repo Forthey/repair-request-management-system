@@ -20,6 +20,13 @@ async def add_client(client: ClientAdd) -> str | None:
     )
 
 
+async def get_client(client_name: str) -> Client | None:
+    return await Database.get_one(
+        ClientORM, Client,
+        name=client_name
+    )
+
+
 async def find_client(name: str) -> bool:
     return await Database.find(ClientORM, name=name)
 
