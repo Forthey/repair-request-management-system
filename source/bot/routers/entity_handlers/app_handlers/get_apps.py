@@ -87,7 +87,7 @@ async def get_worker_apps_offset_next(query: CallbackQuery, state: FSMContext):
     offset = data.get("offset", 0)
     chunk_size = data.get("chunk_size", 3)
 
-    if offset > max_offset - chunk_size:
+    if offset >= max_offset - chunk_size:
         await query.answer("Это последняя страница")
         return
 
