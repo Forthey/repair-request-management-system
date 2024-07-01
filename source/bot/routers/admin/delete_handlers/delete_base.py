@@ -5,10 +5,13 @@ from aiogram.types import Message, CallbackQuery
 
 from bot.commands import base_commands
 from bot.routers.utility_commands.back import back
+from bot.utility.entities_to_str.address_to_str import address_to_str
 from bot.utility.entities_to_str.client_to_str import client_to_str
 from bot.utility.render_buttons import render_inline_buttons, render_keyboard_buttons
 
 from bot.states.delete import DeleteState
+from database.queries.addresses import address_belongs_to_client, get_address, check_if_address_safe_to_delete, \
+    delete_address
 from database.queries.clients import check_if_client_safe_to_delete, get_client, delete_client
 
 router = Router()
@@ -20,7 +23,7 @@ buttons = [
 
 deletable_entities = {
     "delete_client": "Клиент",
-    # "delete_address": "Адрес",
+    "delete_address": "Адрес",
     # "delete_contact": "Контакт",
     # "delete_machine": "Станок",
     # "delete_other": "Другое"
@@ -91,7 +94,63 @@ async def delete_client_by_name_confirmation(query: CallbackQuery, state: FSMCon
 #
 @router.callback_query(StateFilter(DeleteState.choosing_entity), F.data == "delete_address")
 async def delete_address_callback(query: CallbackQuery, state: FSMContext):
-    ...
+    await query.message.answer(
+        "Введите имя клиента, к которому привязан адрес (или напишите \"Далее\", если адрес не привязан к клиенту)"
+    )
+    await state.set_state(DeleteState.choosing_client_name_to_address)
+
+
+@router.message(StateFilter(DeleteState.choosing_client_name_to_address), F.text)
+async def choose_client_to_address(message: Message, state: FSMContext):
+    if message.text != "Далее":
+        client_name = message.text
+        client = await get_client(client_name)
+        if not client:
+            await message.answer(f"Клиента '{client_name}' не существует")
+            return
+
+        await state.update_data(client_name=client_name)
+
+    await message.answer("Введите адрес")
+    await state.set_state(DeleteState.choosing_address_name_to_delete)
+
+
+@router.message(StateFilter(DeleteState.choosing_address_name_to_delete), F.text)
+async def delete_address_by_name(message: Message, state: FSMContext):
+    address_name = message.text
+    client_name = (await state.get_data()).get("client_name")
+    address = await get_address(client_name, address_name)
+
+    if not address:
+        await message.answer(f"Адреса '{address_name}' у клиента '{client_name if client_name else ""}' не существует")
+        return
+    if not await check_if_address_safe_to_delete(client_name, address_name):
+        await message.answer("Нельзя безопасно удалить адрес")
+        return
+
+    await state.update_data(address_name=address_name)
+    await message.answer(
+        text=address_to_str(address),
+        reply_markup=render_inline_buttons({"delete_address_confirmation": "Удалить"}, 1)
+    )
+    await state.set_state(DeleteState.delete_address_confirmation)
+
+
+@router.callback_query(StateFilter(DeleteState.delete_address_confirmation), F.data == "delete_address_confirmation")
+async def delete_address_by_name_confirmation(query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    address_name = data.get("address_name")
+    client_name = data.get("client_name")
+    if not address_name:
+        await query.answer("Что-то пошло не так...")
+    else:
+        await delete_address(client_name, address_name)
+        await query.answer(f"Адрес {address_name} удален")
+    if not await back(state):
+        await query.message.answer(
+            "Выберите действие",
+            reply_markup=render_keyboard_buttons(base_commands, 2)
+        )
 
 
 #
