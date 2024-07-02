@@ -6,7 +6,7 @@ from aiogram.types import Message, CallbackQuery
 from bot.routers.entity_handlers.address_handlers.add_address import add_address
 from bot.routers.entity_handlers.client_handlers.add_client import add_client
 from bot.routers.entity_handlers.contact_handlers.add_contact import add_contact
-from bot.routers.entity_handlers.machine_handlers import add_machine
+from bot.routers.entity_handlers.machine_handlers.add_machine import add_machine
 from bot.states.new import NewState
 from bot.utility.render_buttons import render_inline_buttons
 
