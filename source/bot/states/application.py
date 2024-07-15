@@ -37,10 +37,6 @@ class EditApplicationState(StatesGroup):
     edit_app_confirmation = State()
 
 
-class ApplicationListsState(StatesGroup):
-    list_by_worker = State()
-
-
 add_states_strings: dict[State, str] = {
     AddApplicationState.choosing_app_client:
         "Введите имя клиента (компании), подавшего заявку",

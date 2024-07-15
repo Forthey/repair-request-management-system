@@ -2,6 +2,7 @@ import datetime
 
 from sqlalchemy import insert, select, or_, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.functions import count
 
 from database.engine import async_session_factory
@@ -24,32 +25,34 @@ changeable_app_field_to_str = {
 }
 
 
-async def count_worker_applications(telegram_id: int) -> int:
-    async with async_session_factory() as session:
-        query = (
-            select(count())
-            .select_from(ApplicationORM)
-            .where(
-                or_(
-                    ApplicationORM.repairer_id == telegram_id,
-                    ApplicationORM.editor_id == telegram_id
-                )
-            )
-        )
+async def count_applications(**params) -> int:
+    filters: dict = {}
+    where_clause = or_()
 
-        return (await session.execute(query)).scalar_one()
+    for key, value in params.items():
+        if key == "worker_id":
+            where_clause = or_(
+                ApplicationORM.repairer_id == params["worker_id"],
+                ApplicationORM.editor_id == params["worker_id"]
+            )
+        else:
+            filters[key] = value
+
+    return await Database.count(ApplicationORM, where_clause, **filters)
 
 
 async def get_applications(offset: int = 0, limit: int = 3, **params) -> list[ApplicationWithReasons]:
     filters: dict = {}
     where_clause = or_()
-    if "client_name" in params:
-        filters["client_name"] = params["client_name"]
-    if "worker_id" in params:
-        where_clause = or_(
-            ApplicationORM.repairer_id == params["worker_id"],
-            ApplicationORM.editor_id == params["worker_id"]
-        )
+
+    for key, value in params.items():
+        if key == "worker_id":
+            where_clause = or_(
+                ApplicationORM.repairer_id == params["worker_id"],
+                ApplicationORM.editor_id == params["worker_id"]
+            )
+        else:
+            filters[key] = value
 
     return await Database.get(
         ApplicationORM, ApplicationWithReasons,

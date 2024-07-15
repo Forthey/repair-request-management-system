@@ -18,6 +18,7 @@ from bot.routers.entity_handlers.machine_handlers import machines_base
 from bot.routers.entity_handlers.client_handlers import client_base
 from bot.routers.entity_handlers.contact_handlers import contact_base
 from bot.routers.entity_handlers.address_handlers import address_base
+from bot.routers import lister
 
 from bot.routers.admin import admin_base
 # Commands
@@ -80,5 +81,6 @@ router.include_routers(
     client_base.router,
     contact_base.router,
     address_base.router,
+    lister.router,
     admin_base.router
 )
