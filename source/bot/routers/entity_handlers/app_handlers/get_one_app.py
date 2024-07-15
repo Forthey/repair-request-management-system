@@ -49,6 +49,9 @@ async def choosing_app_id(message: Message, state: FSMContext):
         return
 
     app: ApplicationFull | None = await get_application(app_id)
+    if not app:
+        await message.answer(f"Заявки с id {app_id} не существует")
+        return
 
     await state.update_data(app_id=app_id)
 
