@@ -53,7 +53,7 @@ states_strings: dict[str, str] = {
 
 
 @router.message(StateFilter(None), F.text.lower() == "добавить заявку")
-async def add_client(message: Message, state: FSMContext):
+async def add_app_begin(message: Message, state: FSMContext):
     await message.answer(
         text="Создание новой заявки",
         reply_markup=render_keyboard_buttons(commands, 2)
