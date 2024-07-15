@@ -133,27 +133,27 @@ async def writing_app_notes(message: Message, state: FSMContext):
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_app_confirm")
 async def edit_app_confirm(query: CallbackQuery, state: FSMContext):
-    edited_data = await state.get_data()
+    data = await state.get_data()
 
-    app: ApplicationFull | None = await get_application(edited_data["app_id"])
+    app: ApplicationFull | None = await get_application(data["app_id"])
 
-    if len(edited_data) == 1:
+    if len(data) == 1:
         await query.answer("Вы не изменили ни одно поле")
         return
 
     answer_result = (
-        f"{full_app_to_str(ApplicationFull.model_validate(edited_data))}\n"
+        f"{full_app_to_str(ApplicationFull.model_validate(data))}\n"
         f"\nИзмененные поля: \n"
     )
 
-    for key in edited_data:
+    for key in data:
         try:
             app_attr = getattr(app, key)
         except AttributeError:
             continue
-        if app_attr == edited_data[key] or key not in db_apps.changeable_app_field_to_str:
+        if app_attr == data[key] or key not in db_apps.changeable_app_field_to_str:
             continue
-        answer_result += f"{db_apps.changeable_app_field_to_str[key]}: {getattr(app, key)} -> {edited_data[key]}\n"
+        answer_result += f"{db_apps.changeable_app_field_to_str[key]}: {getattr(app, key)} -> {data[key]}\n"
 
     await query.message.answer(
         answer_result,
@@ -171,19 +171,19 @@ async def cancel_app_edit(query: CallbackQuery, state: FSMContext):
 
 @router.callback_query(StateFilter(EditApplicationState.edit_app_confirmation), F.data == "confirm_app_edit")
 async def confirm_app_edit(query: CallbackQuery, state: FSMContext):
-    edited_data = await state.get_data()
-    app_id = edited_data.pop("app_id")
+    data = await state.get_data()
+    app_id = data.pop("app_id")
     app: ApplicationFull | None = await get_application(app_id)
 
     changed_fields: dict = {}
-    for key in edited_data:
+    for key in data:
         try:
             app_attr = getattr(app, key)
         except AttributeError:
             continue
-        if app_attr == edited_data[key] or key not in db_apps.changeable_app_field_to_str:
+        if app_attr == data[key] or key not in db_apps.changeable_app_field_to_str:
             continue
-        changed_fields[key] = edited_data[key]
+        changed_fields[key] = data[key]
 
     await db_apps.update_application(app_id, **changed_fields)
 
