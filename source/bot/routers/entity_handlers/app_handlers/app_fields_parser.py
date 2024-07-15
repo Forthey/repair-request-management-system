@@ -10,14 +10,19 @@ import database.queries.clients as db_clients
 import database.queries.contacts as db_contacts
 import database.queries.machines as db_machines
 import database.queries.addresses as db_addresses
+from bot.utility.render_buttons import render_inline_buttons
 from schemas.addresses import Address, AddressAdd
 from schemas.contacts import ContactAdd
 
 
-async def parse_app_client_name(message: Message, state: FSMContext) -> bool:
+async def parse_app_client(message: Message, state: FSMContext) -> bool:
     client_name = message.text
     if not await db_clients.find_client(client_name):
-        await message.answer(f"Клиента {client_name} не существует")
+        await message.answer(
+            f"Клиента \"{client_name}\" не существует. Создать его?",
+            reply_markup=render_inline_buttons({"yes_to_add_client": "Да", "no_to_add_client": "Нет"}, 2)
+        )
+        await state.update_data(tmp_client_name=client_name)
         return False
 
     contact_id = (await state.get_data()).get("contact_id")
@@ -33,6 +38,7 @@ async def parse_app_client_name(message: Message, state: FSMContext) -> bool:
         await message.answer(f"Адрес {address}, указанный ранее, не относится к клиенту \"{client_name}\"")
         return False
 
+    await state.update_data(client=(await db_clients.get_client(client_name)))
     await state.update_data(client_name=client_name)
     return True
 
@@ -89,44 +95,51 @@ async def parse_app_reason(message: Message, state: FSMContext) -> bool:
 
 
 async def parse_app_machine(message: Message, state: FSMContext) -> bool:
-    machine = message.text
-    if not await db_machines.find_machine(machine):
-        await message.answer("Такого станка не существует")
+    machine_name = message.text
+    if not await db_machines.find_machine(machine_name):
+        await message.answer(
+            f"Станка \"{machine_name}\" не существует. Создать его?",
+            reply_markup=render_inline_buttons({"yes_to_add_machine": "Да", "no_to_add_machine": "Нет"}, 2)
+        )
+        await state.update_data(tmp_machine_name=machine_name)
         return False
 
-    await state.update_data(machine=db_machines.get_machine(machine))
-    await state.update_data(machine_name=machine)
+    await state.update_data(machine=(await db_machines.get_machine(machine_name)))
+    await state.update_data(machine_name=machine_name)
     return True
 
 
 async def parse_app_address(message: Message, state: FSMContext) -> bool:
     args = message.text.split(" ")
     client_name = (await state.get_data()).get("client_name")
-    address: str
-    if args[0] == "/add":
-        if client_name is None:
-            await message.answer("Не выбран клиент, невозможно добавить адрес")
-            return False
+    address_name: str
 
+    if not client_name:
+        await message.answer("Клиент не выбран, невозможно указать адрес")
+        return False
+
+    if args[0] == "/add":
         if len(args) == 1:
             await message.answer("Неправильный формат команды /add")
             return False
 
-        address = " ".join(args[1:])
-        if not await db_addresses.add_address(AddressAdd(client_name=client_name, name=address)):
+        address_name = " ".join(args[1:])
+        if not await db_addresses.add_address(AddressAdd(client_name=client_name, name=address_name)):
             await message.answer("Такое адрес уже существует")
             return False
     else:
-        address = message.text
+        address_name = message.text
+        address: Address | None = await db_addresses.get_address(client_name, address_name)
+        if address is None:
+            await message.answer(
+                f"Адреса \"{address_name}\" у клиента \"{client_name}\" не существует. Создать его?",
+                reply_markup=render_inline_buttons({"yes_to_add_address": "Да", "no_to_add_address": "Нет"}, 2)
+            )
+            await state.update_data(tmp_address_name=address_name)
+            return False
 
-        if client_name is not None:
-            address_full: Address | None = await db_addresses.get_address(client_name, address)
-            if address_full is None:
-                await message.answer("Такого адреса у клиента не существует")
-                return False
-
-    await state.update_data(address=(await db_addresses.get_address(client_name, address)))
-    await state.update_data(address_name=address)
+    await state.update_data(address=(await db_addresses.get_address(client_name, address_name)))
+    await state.update_data(address_name=address_name)
     return True
 
 

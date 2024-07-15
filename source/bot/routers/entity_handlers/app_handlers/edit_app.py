@@ -10,7 +10,7 @@ from aiogram.types import Message, CallbackQuery
 from bot.commands import base_commands
 from bot.routers.entity_handlers.app_handlers.app_fields_parser import parse_app_est_repair_date_and_duration, \
     parse_app_contact, parse_app_reason, parse_app_machine, parse_app_address
-from bot.states.application import EditApplicationState, ChooseOneApplicationState
+from bot.states.application import EditApplicationState, ChooseOneApplicationState, edit_states_strings
 from bot.utility.entities_to_str.app_to_str import full_app_to_str, app_to_str
 from bot.utility.render_buttons import render_inline_buttons, render_keyboard_buttons
 
@@ -30,29 +30,6 @@ edit_field = {
 }
 
 router = Router()
-
-states_strings: dict[str, str] = {
-    EditApplicationState.choosing_app_contact:
-        "Введите id контакта, привязанного к клиенту "
-        "(или привяжите новый контакт к клиенту, используя команду /add:\n"
-        "/add Имя +790012088\n"
-        "/add Имя example@gmail.com)\n",
-    EditApplicationState.choosing_app_reasons:
-        "Введите причину подачи заявки",
-    EditApplicationState.choosing_app_machine:
-        "Введите название станка",
-    EditApplicationState.choosing_app_address:
-        "Введите адрес, на который необходимо будет выехать "
-        "(или привяжите новые адрес к компании, используя команду /add: "
-        "/add Пример Адреса)",
-    EditApplicationState.editing_app_est_repair_date_and_duration:
-        "Введите примерную дату ремонта (формат XX.XX.XXXX) "
-        "и через пробел примерное время, необходимое на ремонт (в часах) "
-        "(Необязатльное поле)",
-    EditApplicationState.editing_app_notes:
-        "Напишите допольнительную информацию, которую не удалось поместить в поля выше"
-        "(Необязательное поле)",
-}
 
 
 async def print_edit_message(message: Message, state: FSMContext):
@@ -82,7 +59,7 @@ async def confirm_edit_app_begin(query: CallbackQuery, state: FSMContext):
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_contact")
 async def edit_app_contact(query: CallbackQuery, state: FSMContext):
-    await query.message.answer(states_strings[EditApplicationState.choosing_app_contact])
+    await query.message.answer(edit_states_strings[EditApplicationState.choosing_app_contact])
     await state.set_state(EditApplicationState.choosing_app_contact)
 
 
@@ -97,7 +74,7 @@ async def choosing_app_contact(message: Message, state: FSMContext):
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_machine")
 async def edit_app_machine(query: CallbackQuery, state: FSMContext):
-    await query.message.answer(states_strings[EditApplicationState.choosing_app_machine])
+    await query.message.answer(edit_states_strings[EditApplicationState.choosing_app_machine])
     await state.set_state(EditApplicationState.choosing_app_machine)
 
 
@@ -112,7 +89,7 @@ async def choosing_app_machine(message: Message, state: FSMContext):
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_address")
 async def edit_app_contact(query: CallbackQuery, state: FSMContext):
-    await query.message.answer(states_strings[EditApplicationState.choosing_app_address])
+    await query.message.answer(edit_states_strings[EditApplicationState.choosing_app_address])
     await state.set_state(EditApplicationState.choosing_app_address)
 
 
@@ -127,7 +104,7 @@ async def edit_address(message: Message, state: FSMContext):
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_est_rep_date_duration")
 async def edit_est_rep_date_duration(query: CallbackQuery, state: FSMContext):
-    await query.message.answer(states_strings[EditApplicationState.editing_app_est_repair_date_and_duration])
+    await query.message.answer(edit_states_strings[EditApplicationState.editing_app_est_repair_date_and_duration])
     await state.set_state(EditApplicationState.editing_app_est_repair_date_and_duration)
 
 
@@ -142,7 +119,7 @@ async def writing_app_est_repair_date_and_duration(message: Message, state: FSMC
 
 @router.callback_query(StateFilter(EditApplicationState.waiting_for_click), F.data == "edit_notes")
 async def edit_app_notes(query: CallbackQuery, state: FSMContext):
-    await query.message.answer(states_strings[EditApplicationState.editing_app_est_repair_date_and_duration])
+    await query.message.answer(edit_states_strings[EditApplicationState.editing_app_est_repair_date_and_duration])
     await state.set_state(EditApplicationState.editing_app_est_repair_date_and_duration)
 
 
@@ -170,7 +147,11 @@ async def edit_app_confirm(query: CallbackQuery, state: FSMContext):
     )
 
     for key in edited_data:
-        if key == "app_id" or getattr(app, key) == edited_data[key] or key not in db_apps.changeable_app_field_to_str:
+        try:
+            app_attr = getattr(app, key)
+        except AttributeError:
+            continue
+        if app_attr == edited_data[key] or key not in db_apps.changeable_app_field_to_str:
             continue
         answer_result += f"{db_apps.changeable_app_field_to_str[key]}: {getattr(app, key)} -> {edited_data[key]}\n"
 
@@ -196,7 +177,11 @@ async def confirm_app_edit(query: CallbackQuery, state: FSMContext):
 
     changed_fields: dict = {}
     for key in edited_data:
-        if getattr(app, key) == edited_data[key] or key not in db_apps.changeable_app_field_to_str:
+        try:
+            app_attr = getattr(app, key)
+        except AttributeError:
+            continue
+        if app_attr == edited_data[key] or key not in db_apps.changeable_app_field_to_str:
             continue
         changed_fields[key] = edited_data[key]
 

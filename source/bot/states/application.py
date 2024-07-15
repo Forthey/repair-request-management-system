@@ -39,3 +39,52 @@ class EditApplicationState(StatesGroup):
 
 class ApplicationListsState(StatesGroup):
     list_by_worker = State()
+
+
+add_states_strings: dict[State, str] = {
+    AddApplicationState.choosing_app_client:
+        "Введите имя клиента (компании), подавшего заявку",
+    AddApplicationState.choosing_app_contact:
+        "Введите id контакта, привязанного к клиенту "
+        "(или привяжите новый контакт к клиенту, используя команду /add:\n"
+        "/add Имя +790012088\n"
+        "/add Имя example@gmail.com)\n",
+    AddApplicationState.choosing_app_reasons:
+        "Введите причины подачи заявки (когда закончите - нажмите 'Далее')",
+    AddApplicationState.choosing_app_machine:
+        "Введите название станка",
+    AddApplicationState.choosing_app_address:
+        "Введите адрес, на который необходимо будет выехать "
+        "(или привяжите новые адрес к компании, используя команду /add: "
+        "/add Пример Адреса)",
+    AddApplicationState.writing_app_est_repair_date_and_duration:
+        "Введите примерную дату ремонта (формат XX.XX.XXXX) "
+        "и через пробел примерное время, необходимое на ремонт (в часах) "
+        "(Необязатльное поле)",
+    AddApplicationState.writing_app_notes:
+        "Напишите допольнительную информацию, которую не удалось поместить в поля выше"
+        "(Необязательное поле)",
+}
+
+edit_states_strings: dict[State, str] = {
+    EditApplicationState.choosing_app_contact:
+        "Введите id контакта, привязанного к клиенту "
+        "(или привяжите новый контакт к клиенту, используя команду /add:\n"
+        "/add Имя +790012088\n"
+        "/add Имя example@gmail.com)\n",
+    EditApplicationState.choosing_app_reasons:
+        "Введите причину подачи заявки",
+    EditApplicationState.choosing_app_machine:
+        "Введите название станка",
+    EditApplicationState.choosing_app_address:
+        "Введите адрес, на который необходимо будет выехать "
+        "(или привяжите новые адрес к компании, используя команду /add: "
+        "/add Пример Адреса)",
+    EditApplicationState.editing_app_est_repair_date_and_duration:
+        "Введите примерную дату ремонта (формат XX.XX.XXXX) "
+        "и через пробел примерное время, необходимое на ремонт (в часах) "
+        "(Необязатльное поле)",
+    EditApplicationState.editing_app_notes:
+        "Напишите допольнительную информацию, которую не удалось поместить в поля выше"
+        "(Необязательное поле)",
+}
