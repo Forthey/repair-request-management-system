@@ -57,13 +57,15 @@ class Database:
             return [schema.model_validate(res, from_attributes=True) for res in result_orm]
 
     @staticmethod
-    async def count[Table](table: type[Table], **filters) -> int:
+    async def count[Table](table: type[Table], where_clause: ColumnElement[bool] | None = None, **filters) -> int:
         async with async_session_factory() as session:
             query = (
                 select(count())
                 .select_from(table)
                 .filter_by(**filters)
             )
+            if where_clause is not None:
+                query = query.where(where_clause)
 
             return (await session.execute(query)).scalar_one()
 
