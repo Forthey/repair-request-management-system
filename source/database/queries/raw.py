@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from sqlalchemy import select, UnaryExpression, insert, or_, delete, ColumnElement
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, QueryableAttribute, selectinload
+from sqlalchemy.sql.functions import count
 
 from database.database import Base
 from database.engine import async_session_factory
@@ -54,6 +55,17 @@ class Database:
             result_orm = (await session.execute(query)).scalars().all()
 
             return [schema.model_validate(res, from_attributes=True) for res in result_orm]
+
+    @staticmethod
+    async def count[Table](table: type[Table], **filters) -> int:
+        async with async_session_factory() as session:
+            query = (
+                select(count())
+                .select_from(table)
+                .filter_by(**filters)
+            )
+
+            return (await session.execute(query)).scalar_one()
 
     @staticmethod
     async def add[Table, ReturnType](table: type[Table], return_column: Mapped | None = None,
