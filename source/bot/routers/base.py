@@ -3,6 +3,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
+from bot.main_filter import MainFilter
 from bot.routers.utility_commands.back import back
 from bot.utility.render_buttons import render_keyboard_buttons
 
@@ -27,7 +28,8 @@ from bot.commands import base_commands
 
 router = Router()
 router.message.filter(
-    AuthFilter()
+    AuthFilter(),
+    MainFilter()
 )
 
 
