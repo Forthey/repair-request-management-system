@@ -4,3 +4,4 @@ __pycache__
 @repairRequestManagerBot.session
 token.py
 logs
+backup/

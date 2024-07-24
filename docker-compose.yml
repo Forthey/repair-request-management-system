@@ -63,5 +63,33 @@ services:
       postgres:
         condition: service_healthy
 
+  database_backup:
+    container_name: database_backup
+    restart: no
+    build:
+      context: .
+      dockerfile: dockerfiles/database_backup/Dockerfile
+    volumes_from:
+      - postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - pg_data:/pg_data
+      - ${BACKUP_PATH}:/backup
+
+  database_restore:
+    container_name: database_restore
+    restart: no
+    build:
+      context: .
+      dockerfile: dockerfiles/database_restore/Dockerfile
+      args:
+        ARCHIVE_TO_BACKUP: ${ARCHIVE_TO_BACKUP}
+    volumes:
+      - pg_data:/pg_data
+      - ${BACKUP_PATH}:/backup
+
+
 volumes:
   pg_data:

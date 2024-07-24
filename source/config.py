@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     POSTGRES_VERSION: str
     REDIS_VERSION: str
 
+    BACKUP_PATH: str
+    ARCHIVE_TO_BACKUP: str
+
 
     @property
     def get_token(self):
