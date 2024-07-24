@@ -48,3 +48,7 @@ async def check_if_client_safe_to_delete(client_name: str) -> bool:
 
 async def delete_client(client_name: str) -> str:
     return await Database.delete(ClientORM, ClientORM.name, client_name)
+
+
+async def merge_clients(main_client_name: str, other_client_name: str) -> bool:
+    return await Database.update(ClientORM, ClientORM.name == other_client_name, main_client_name=main_client_name)

@@ -6,7 +6,7 @@ from pydantic import ValidationError
 
 from bot.commands import base_commands
 from bot.routers.utility_commands.back import back
-from bot.states.client import ClientState
+from bot.states.client import AddClientState
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
 import database.queries.clients as db_clients
 import database.queries.other as db_other
@@ -31,10 +31,10 @@ async def add_client(message: Message, state: FSMContext):
         text="Введите название клиента (компании):"
     )
 
-    await state.set_state(ClientState.writing_client_name)
+    await state.set_state(AddClientState.writing_client_name)
 
 
-@router.message(StateFilter(ClientState.writing_client_name), F.text)
+@router.message(StateFilter(AddClientState.writing_client_name), F.text)
 async def add_client_name(message: Message, state: FSMContext):
     if message.text == "Далее":
         client_data = await state.get_data()
@@ -44,7 +44,7 @@ async def add_client_name(message: Message, state: FSMContext):
             )
             return
         else:
-            await state.set_state(ClientState.choosing_main_client)
+            await state.set_state(AddClientState.choosing_main_client)
             await message.answer("Выберите головную компанию")
             return
 
@@ -60,18 +60,18 @@ async def add_client_name(message: Message, state: FSMContext):
     await message.answer("Выберите головную компанию")
 
     await state.update_data(name=name)
-    await state.set_state(ClientState.choosing_main_client)
+    await state.set_state(AddClientState.choosing_main_client)
 
 
-@router.message(StateFilter(ClientState.choosing_main_client), F.text)
+@router.message(StateFilter(AddClientState.choosing_main_client), F.text)
 async def choose_main_client(message: Message, state: FSMContext):
     if message.text == "Далее":
         await message.answer("Выберите направление деятельности клиента")
-        await state.set_state(ClientState.choosing_activity)
+        await state.set_state(AddClientState.choosing_activity)
         return
     if message.text == "Назад":
         await message.answer("Введите название клиента (компании)")
-        await state.set_state(ClientState.writing_client_name)
+        await state.set_state(AddClientState.writing_client_name)
         return
 
     main_client_name = message.text
@@ -82,14 +82,14 @@ async def choose_main_client(message: Message, state: FSMContext):
     await message.answer("Выберите направление деятельности клиента")
 
     await state.update_data(main_client_name=main_client_name)
-    await state.set_state(ClientState.choosing_activity)
+    await state.set_state(AddClientState.choosing_activity)
 
 
-@router.message(StateFilter(ClientState.choosing_activity), F.text)
+@router.message(StateFilter(AddClientState.choosing_activity), F.text)
 async def choose_activity(message: Message, state: FSMContext):
     if message.text == "Назад":
         await message.answer("Выберите головную компанию")
-        await state.set_state(ClientState.choosing_main_client)
+        await state.set_state(AddClientState.choosing_main_client)
         return
 
     if message.text != "Далее":
@@ -114,18 +114,18 @@ async def choose_activity(message: Message, state: FSMContext):
         reply_markup=render_inline_buttons({"confirm_client_add": "Подтвердить", "cancel_client_add": "Отмена"}, 1)
     )
 
-    await state.set_state(ClientState.add_client_confirmation)
+    await state.set_state(AddClientState.add_client_confirmation)
 
 
-@router.callback_query(StateFilter(ClientState.add_client_confirmation), F.data == "cancel_client_add")
+@router.callback_query(StateFilter(AddClientState.add_client_confirmation), F.data == "cancel_client_add")
 async def add_app_confirmation_cancel(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.answer("Отменено")
-    await state.set_state(ClientState.choosing_activity)
+    await state.set_state(AddClientState.choosing_activity)
     # await callback_query.message.answer(states_strings[ClientState.choosing_activity])
     # TODO: states_strings
 
 
-@router.callback_query(StateFilter(ClientState.add_client_confirmation), F.data == "confirm_client_add")
+@router.callback_query(StateFilter(AddClientState.add_client_confirmation), F.data == "confirm_client_add")
 async def add_client_confirmation(callback: CallbackQuery, state: FSMContext):
     client_data = await state.get_data()
     client = ClientAdd.model_validate(client_data, from_attributes=True)

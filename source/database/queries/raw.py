@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from sqlalchemy import select, UnaryExpression, insert, or_, delete, ColumnElement
+from sqlalchemy import select, UnaryExpression, insert, or_, delete, ColumnElement, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, QueryableAttribute, selectinload
 from sqlalchemy.sql.functions import count
@@ -177,5 +177,20 @@ class Database:
 
                 await session.commit()
                 return key_value
-            except Exception as e:
+            except Exception:
                 return None
+
+    @staticmethod
+    async def update[Table](table: type(Table), where_clause: ColumnElement[bool], **values) -> bool:
+        async with async_session_factory() as session:
+            query = (
+                update(table)
+                .where(where_clause)
+                .values(**values)
+                .returning(table)
+            )
+
+            updated_rows = (await session.execute(query)).scalars().all()
+
+            await session.commit()
+            return len(updated_rows) > 0

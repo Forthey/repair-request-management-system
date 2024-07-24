@@ -39,6 +39,10 @@ client_commands = [
     "Отмена"
 ]
 
+admin_client_commands = [
+    "Связать клиентов"
+]
+
 contact_commands = [
     "Добавить контакт",
     "Отмена"
