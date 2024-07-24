@@ -4,10 +4,11 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
 from bot.routers.entity_handlers.app_handlers.get_apps import apps_to_str
+from bot.routers.lister import create_lister
 from bot.states.worker import OneWorkerState
 from bot.utility.entities_to_str.worker_to_str import worker_to_str
 from bot.utility.render_buttons import render_keyboard_buttons, render_inline_buttons
-from database.queries.applications import get_applications, count_worker_applications
+from database.queries.applications import get_applications, count_applications
 from database.queries.workers import get_worker, update_worker
 from redis_db.workers import reload_worker
 from schemas.applications import ApplicationWithReasons
@@ -164,14 +165,15 @@ async def get_apps_from_worker(query: CallbackQuery, state: FSMContext):
     if worker_id is None:
         await query.answer("Что-то пошло не так...")
         return
-    apps_number = await count_worker_applications(worker_id)
-
-    chunk_size = 3
-    await state.update_data(max_offset=apps_number)
-    await state.update_data(offset=0)
-    await state.update_data(chunk_size=chunk_size)
-    await state.set_state(OneWorkerState.listing_worker_apps)
-    await get_all_apps_from_worker(query.message, state)
+    await query.message.answer(
+        f"Список заявок работника {worker_id}",
+        reply_markup=render_keyboard_buttons(commands, 1)
+    )
+    lister = await create_lister(
+        get_applications, count_applications, apps_to_str,
+        query.message, state,
+        worker_id=worker_id
+    )
 
 
 async def get_all_apps_from_worker(message: Message, state: FSMContext):

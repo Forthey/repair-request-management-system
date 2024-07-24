@@ -4,11 +4,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
 from bot.routers.lister import create_lister
-from bot.states.application import ApplicationListsState
 from bot.utility.entities_to_str.app_to_str import app_to_str
 from bot.utility.render_buttons import render_inline_buttons, render_keyboard_buttons
 
-from database.queries.applications import get_applications, count_worker_applications, count_applications
+from database.queries.applications import get_applications, count_applications
 from schemas.applications import ApplicationWithReasons
 
 router = Router()
