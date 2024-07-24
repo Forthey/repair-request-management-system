@@ -1,4 +1,5 @@
 import datetime
+import random
 import re
 
 from aiogram import Router, F
@@ -17,10 +18,12 @@ from bot.utility.render_buttons import render_keyboard_buttons, render_inline_bu
 import database.queries.applications as db_apps
 from database.queries.addresses import add_address, get_address
 from database.queries.clients import add_client
+from database.queries.contacts import get_contacts_from_client
 from database.queries.machines import add_machine, get_machine
 from schemas.addresses import AddressAdd
 from schemas.applications import ApplicationAdd
 from schemas.clients import ClientAdd
+from schemas.contacts import Contact
 
 router = Router()
 
@@ -145,12 +148,26 @@ async def writing_app_notes(message: Message, state: FSMContext):
     app_data = await state.get_data()
     app_data["editor_id"] = message.from_user.id
     app_reasons: list[str] | None = app_data.get("app_reasons")
+
+    client_name = app_data.get("client_name")
+    contact_id = app_data.get("contact_id")
+    if client_name and not contact_id:
+        contacts: list[Contact] = await get_contacts_from_client(client_name)
+        if len(contacts) > 0:
+            chosen_contact_index = random.randint(0, len(contacts) - 1)
+            app_data["contact_id"] = contacts[chosen_contact_index].id
+            app_data["contact"] = contacts[chosen_contact_index]
+            await state.update_data(contact_id=contacts[chosen_contact_index].id, contact=contacts[chosen_contact_index])
+
     if app_reasons is None:
         app_reasons = list()
     try:
         application = ApplicationAdd.model_validate(app_data)
-    except ValidationError as e:
-        await message.answer("Заполнены не все обязательные поля")
+    except ValidationError:
+        await message.answer(
+            "Заполнены не все обязательные поля\n"
+            "Проверьте, что указали контакт или клиента, у которого есть контакты в базе"
+        )
         await message.answer(add_states_strings[AddApplicationState.writing_app_notes])
         return
 
@@ -183,12 +200,16 @@ async def add_app_confirmation(callback_query: CallbackQuery, state: FSMContext)
 
     app_data["editor_id"] = callback_query.from_user.id
     app_reasons: list[str] | None = app_data.get("app_reasons")
+
     if app_reasons is None:
         app_reasons = list()
     try:
         application = ApplicationAdd.model_validate(app_data)
     except ValidationError:
-        await callback_query.answer("Заполнены не все обязательные поля")
+        await callback_query.answer(
+            "Заполнены не все обязательные поля\n"
+            "Проверьте, что указали контакт или клиента, у которого есть контакты в базе"
+        )
         await add_app_confirmation_cancel(callback_query, state)
         return
 
